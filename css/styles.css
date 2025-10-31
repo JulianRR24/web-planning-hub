@@ -1,0 +1,23 @@
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+#current-time-indicator {
+    top: 29.46rem;
+}
+
+.toggle-dot {
+    transition: transform 0.2s ease-in-out;
+}
+
+.toggle-bg:has(input:checked) {
+    background-color: #3b82f6;
+}
+
+input:checked~.toggle-dot {
+    transform: translateX(100%);
+}
