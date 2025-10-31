@@ -94,6 +94,3 @@ web-planning-hub/
 - Usa importaciones explícitas y evita el uso de comodines.
 - Mantén un formato y nomenclatura consistentes.
 - Abre issues para discutir cambios importantes antes de implementarlos.
-
-## Licencia
-Licencia MIT.
