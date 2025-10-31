@@ -1,99 +1,99 @@
 # Web Planning Hub
 
-A responsive, modular personal planning web app designed for users with non-traditional schedules (rotating shifts, complex family schedules). Phase 1 delivers a clean static UI with mobile-first navigation and a dashboard of clickable widgets.
+Una aplicación web de planificación personal modular y receptiva diseñada para usuarios con horarios no tradicionales (turnos rotativos, horarios familiares complejos). La Fase 1 ofrece una interfaz de usuario estática con navegación mobile-first y un panel de widgets interactivos.
 
-## Overview
-- Status: Phase 1 (Static HTML + CSS) complete and aligned with the design vision.
-- Navigation: Bottom fixed nav with 4 primary screens.
-- Pages:
-  - Home (index.html): Top 2x2 compact widgets + daily agenda below.
-  - Routines (rutinas.html): Agenda view + routine selector + link to manage routines.
-  - Manage Routines (gestionar-rutinas.html): Static CRUD list placeholders.
-  - Widgets (widgets.html): Widget dashboard grid; all items clickable.
-  - Market List (mercado.html): Simple checklist with CTA.
-  - Settings (config.html): Mock settings for future use.
+## Visión General
+- Estado: Fase 1 (HTML + CSS estático) completada y alineada con la visión de diseño.
+- Navegación: Menú inferior fijo con 4 pantallas principales.
+- Páginas:
+  - Inicio (index.html): Widgets compactos 2x2 + agenda diaria debajo.
+  - Rutinas (rutinas.html): Vista de agenda + selector de rutinas + enlace a gestión de rutinas.
+  - Gestionar Rutinas (gestionar-rutinas.html): Lista estática CRUD.
+  - Widgets (widgets.html): Panel de widgets interactivos; todos los elementos son clicables.
+  - Lista del Mercado (mercado.html): Lista de compras simple con CTA.
+  - Configuración (config.html): Ajustes simulados para uso futuro.
 
-## Key Features (Phase 1)
-- Mobile-first UI using Tailwind CDN and a lightweight custom design system.
-- Bottom navigation with consistent 4 tabs: Home, Routines, Widgets, Settings.
-- Clickable widgets via anchor tags, linking to internal pages or external resources.
-- Daily agenda timeline with sample events and a static current-time indicator.
+## Características Principales (Fase 1)
+- Interfaz mobile-first usando Tailwind CDN y un sistema de diseño personalizado ligero.
+- Navegación inferior con 4 pestañas consistentes: Inicio, Rutinas, Widgets, Configuración.
+- Widgets interactivos mediante etiquetas de anclaje, que enlazan a páginas internas o recursos externos.
+- Línea de tiempo de agenda diaria con eventos de ejemplo y un indicador estático de hora actual.
 
-## Tech Stack
-- Markup/Styles: HTML5, Tailwind CSS (CDN), custom CSS variables (styles.css).
-- JavaScript: Placeholder files for later phases (no active logic yet).
-- No build tooling required; static files are directly viewable in a browser.
+## Tecnologías Utilizadas
+- Maquetado/Estilos: HTML5, Tailwind CSS (CDN), variables CSS personalizadas (styles.css).
+- JavaScript: Archivos de marcador de posición para futuras fases (sin lógica activa aún).
+- Sin herramientas de compilación necesarias; los archivos estáticos son directamente visibles en un navegador.
 
-## Project Structure
+## Estructura del Proyecto
 ```
 web-planning-hub/
-├─ index.html                 # Home: 2x2 widgets + daily agenda
-├─ rutinas.html               # Routines: agenda + selector + link to CRUD
-├─ gestionar-rutinas.html     # Manage routines: static CRUD list
-├─ widgets.html               # Dashboard: clickable widget grid
-├─ mercado.html               # Market list: basic checklist
-├─ config.html                # Settings: future options
+├─ index.html                 # Inicio: Widgets 2x2 + agenda diaria
+├─ rutinas.html               # Rutinas: agenda + selector + enlace a CRUD
+├─ gestionar-rutinas.html     # Gestionar rutinas: lista CRUD estática
+├─ widgets.html               # Panel: cuadrícula de widgets interactivos
+├─ mercado.html               # Lista del mercado: lista de verificación básica
+├─ config.html                # Configuración: opciones futuras
 ├─ css/
-│  └─ styles.css             # CSS variables and reusable classes
+│  └─ styles.css             # Variables CSS y clases reutilizables
 ├─ js/
 │  ├─ main.js
 │  ├─ rutinas.js
 │  ├─ widgets.js
 │  └─ utils.js
-└─ assets/                    # (reserved)
+└─ assets/                    # (reservado)
 ```
 
-## Design System
-- CSS variables in `:root` for colors, radii, shadows, and spacing.
-- Reusable classes:
-  - `.container` layout utility
-  - `.card` elevated surface with border and radius
+## Sistema de Diseño
+- Variables CSS en `:root` para colores, radios, sombras y espaciados.
+- Clases reutilizables:
+  - `.container` utilidad de diseño
+  - `.card` superficie elevada con borde y radio
   - `.button`, `.button-primary`, `.button-secondary`
-- Icons via inline SVGs.
+- Iconos mediante SVGs en línea.
 
-## Accessibility
-- Mobile-first layout and large touch targets.
-- ARIA labels on interactive icons and navigation items.
-- Next: focus states, `aria-current` in nav, keyboard navigation, and color contrast validation.
+## Accesibilidad
+- Diseño mobile-first y objetivos táctiles grandes.
+- Etiquetas ARIA en iconos interactivos y elementos de navegación.
+- Próximos pasos: estados de enfoque, `aria-current` en navegación, navegación por teclado y validación de contraste de color.
 
-## How to Run
-- Open `index.html` in your browser.
-- Navigate using the bottom menu.
-- External links open in a new tab when appropriate (e.g., Pico y Placa, Weather).
+## Cómo Ejecutar
+- Abre `index.html` en tu navegador.
+- Navega usando el menú inferior.
+- Los enlaces externos se abren en una nueva pestaña cuando es apropiado (ej. Pico y Placa, Clima).
 
-## Roadmap
-- Phase 1 (now): Static UI, responsive pages, clickable widgets. ✅
-- Phase 2: Interactivity (JavaScript)
-  - Hash-based SPA routing (no full-page reloads).
-  - State layer with `localStorage` for:
-    - Routines list and active routine.
-    - Favorite widgets (render top 2x2 on Home).
-    - Market list CRUD.
-    - Basic prefs (theme, language, city).
-  - Dynamic current-time indicator in the agenda.
-  - Widgets backed by APIs (e.g., weather) with graceful fallbacks.
-- Phase 3: Persistence & Users (Backend)
-  - Migrate state from `localStorage` to Firebase/Supabase.
-  - Authentication (email/password, OAuth).
-  - Sync across devices, security rules, and quota management.
-- Phase 4: Intelligence & Automation
-  - Smart suggestions for schedules.
-  - Intelligent reminders and notifications.
-  - Pattern-based agenda prefill.
+## Hoja de Ruta
+- Fase 1 (actual): Interfaz de usuario estática, páginas responsivas, widgets interactivos. ✅
+- Fase 2: Interactividad (JavaScript)
+  - Enrutamiento SPA basado en hash (sin recargas completas de página).
+  - Capa de estado con `localStorage` para:
+    - Lista de rutinas y rutina activa.
+    - Widgets favoritos (mostrar 2x2 en Inicio).
+    - CRUD de lista de mercado.
+    - Preferencias básicas (tema, idioma, ciudad).
+  - Indicador dinámico de hora actual en la agenda.
+  - Widgets respaldados por APIs (ej. clima) con fallos elegantes.
+- Fase 3: Persistencia y Usuarios (Backend)
+  - Migrar estado de `localStorage` a Firebase/Supabase.
+  - Autenticación (email/contraseña, OAuth).
+  - Sincronización entre dispositivos, reglas de seguridad y gestión de cuotas.
+- Fase 4: Inteligencia y Automatización
+  - Sugerencias inteligentes para horarios.
+  - Recordatorios y notificaciones inteligentes.
+  - Relleno automático de agenda basado en patrones.
 
-## Planned Data Model (Phase 2)
-- `userPreferences`: `{ theme, language, city, timeFormat }`
-- `routines`: `[{ id, name, icon, schedule: [{ id, title, start, end, color }], isActive }]`
-- `activeRoutineId`: `string`
-- `widgetsCatalog`: `[{ id, type, name, config }]`
-- `favoriteWidgets`: `[{ id, order, configOverrides }]` (max 4 for Home)
-- `marketList`: `[{ id, text, done }]`
+## Modelo de Datos Previsto (Fase 2)
+- `preferenciasUsuario`: `{ tema, idioma, ciudad, formatoHora }`
+- `rutinas`: `[{ id, nombre, icono, horario: [{ id, titulo, inicio, fin, color }], estaActiva }]`
+- `idRutinaActiva`: `cadena`
+- `catalogoWidgets`: `[{ id, tipo, nombre, configuracion }]`
+- `widgetsFavoritos`: `[{ id, orden, configuracionPersonalizada }]` (máx. 4 para Inicio)
+- `listaMercado`: `[{ id, texto, hecho }]`
 
-## Contribution
-- Keep code clean, modular, and self-explanatory.
-- Use explicit imports and avoid wildcard usage.
-- Maintain consistent formatting and naming.
-- Open issues for discussion before large changes.
+## Contribución
+- Mantén el código limpio, modular y autoexplicativo.
+- Usa importaciones explícitas y evita el uso de comodines.
+- Mantén un formato y nomenclatura consistentes.
+- Abre issues para discutir cambios importantes antes de implementarlos.
 
-## License
-MIT License.
+## Licencia
+Licencia MIT.
