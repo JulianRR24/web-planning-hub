@@ -2,6 +2,9 @@
 
 Una aplicación web de planificación personal modular y receptiva diseñada para usuarios con horarios no tradicionales (turnos rotativos, horarios familiares complejos). La Fase 1 ofrece una interfaz de usuario estática con navegación mobile-first y un panel de widgets interactivos.
 
+<img width="367" height="823" alt="image" src="https://github.com/user-attachments/assets/76f159a1-7529-4f3c-8a1f-c086f8846984" />
+
+
 ## Visión General
 - Estado: Fase 1 (HTML + CSS estático) completada y alineada con la visión de diseño.
 - Navegación: Menú inferior fijo con 4 pantallas principales.
