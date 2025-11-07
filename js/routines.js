@@ -1,7 +1,7 @@
 import { getItem, setItem } from "./storage.js";
 import { qs, qsa, on, uid, days, dayName } from "./ui.js";
 
-const state = { editingId: "", buffer: null };
+const state = { editingId: "", buffer: null, editingEventId: "" };
 
 const initPage = () => {
   applyTheme();
@@ -58,9 +58,16 @@ const addEventToBuffer = () => {
   const category = qs("#eventCategory").value.trim();
   const color = qs("#eventColor").value || "#c7d2fe";
   if (!title) return;
-  const ev = { id: uid("e_"), start, end, title, category, color };
   const buf = state.buffer || emptyRoutine();
-  buf.days[day] = [...buf.days[day], ev].sort((a, b) => a.start.localeCompare(b.start));
+  if (state.editingEventId) {
+    buf.days[day] = buf.days[day].map(x => x.id === state.editingEventId ? { ...x, start, end, title, category, color } : x).sort((a, b) => a.start.localeCompare(b.start));
+    state.editingEventId = "";
+    const btn = qs("#addEventBtn");
+    if (btn) btn.textContent = "Agregar evento";
+  } else {
+    const ev = { id: uid("e_"), start, end, title, category, color };
+    buf.days[day] = [...buf.days[day], ev].sort((a, b) => a.start.localeCompare(b.start));
+  }
   state.buffer = buf;
   renderDayEvents();
 };
@@ -82,7 +89,22 @@ const renderDayEvents = () => {
     const c = document.createElement("div");
     c.className = "w-5 h-5 rounded";
     c.style.background = ev.color;
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
+    edit.textContent = "Editar";
+    on(edit, "click", () => {
+      qs("#eventStart").value = ev.start;
+      qs("#eventEnd").value = ev.end;
+      qs("#eventTitle").value = ev.title;
+      qs("#eventCategory").value = ev.category || "";
+      qs("#eventColor").value = ev.color || "#c7d2fe";
+      state.editingEventId = ev.id;
+      const btn = qs("#addEventBtn");
+      if (btn) btn.textContent = "Actualizar";
+    });
     const del = document.createElement("button");
+    del.type = "button";
     del.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
     del.textContent = "Eliminar";
     on(del, "click", () => {
@@ -93,6 +115,7 @@ const renderDayEvents = () => {
     row.appendChild(t);
     row.appendChild(d);
     row.appendChild(c);
+    row.appendChild(edit);
     row.appendChild(del);
     wrap.appendChild(row);
   });
@@ -201,10 +224,10 @@ const deleteRoutine = (id) => {
 };
 
 const wireEditor = () => {
-  on(qs("#newRoutineBtn"), "click", () => { state.editingId = ""; state.buffer = emptyRoutine(); qs("#routineName").value = ""; renderDayEvents(); });
+  on(qs("#newRoutineBtn"), "click", () => { state.editingId = ""; state.buffer = emptyRoutine(); state.editingEventId = ""; qs("#routineName").value = ""; const btn = qs("#addEventBtn"); if (btn) btn.textContent = "Agregar evento"; renderDayEvents(); });
   on(qs("#addEventBtn"), "click", addEventToBuffer);
   on(qs("#saveRoutineBtn"), "click", saveRoutine);
-  on(qs("#routineDay"), "change", renderDayEvents);
+  on(qs("#routineDay"), "change", () => { state.editingEventId = ""; const btn = qs("#addEventBtn"); if (btn) btn.textContent = "Agregar evento"; renderDayEvents(); });
   on(qs("#exportRoutines"), "click", exportJSON);
   on(qs("#importRoutines"), "change", importJSON);
 };
