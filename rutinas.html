@@ -24,8 +24,15 @@
                     href="./rutinas.html">Rutinas</a>
                 <a class="px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     href="./widgets.html">Widgets</a>
-                <button id="themeToggle"
-                    class="px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">Tema</button>
+                <button id="settingsBtn" class="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Configuración">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.39 1.26 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                    </svg>
+                </button>
             </nav>
         </div>
     </header>
@@ -58,20 +65,23 @@
                     <select id="routineDay"
                         class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"></select>
                 </div>
-                <div class="grid sm:grid-cols-5 gap-2">
+                <div class="grid sm:grid-cols-6 gap-2">
                     <input id="eventStart" type="time"
                         class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
                     <input id="eventEnd" type="time"
                         class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
                     <input id="eventTitle"
-                        class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                        placeholder="Descripción" />
+                        class="sm:col-span-2 px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                        placeholder="Título" />
                     <input id="eventCategory"
                         class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                         placeholder="Categoría" />
                     <input id="eventColor" type="color"
                         class="px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
                 </div>
+                <textarea id="eventDesc" rows="3"
+                    class="w-full px-3 py-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                    placeholder="Descripción (multi-línea)"></textarea>
                 <div class="flex items-center gap-2">
                     <button id="addEventBtn"
                         class="px-3 py-2 rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900"
@@ -84,6 +94,50 @@
             </form>
         </section>
     </main>
+
+    <div id="settingsModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 p-4">
+        <div
+            class="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="font-semibold">Configuración</div>
+                <button id="settingsClose" class="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
+                    aria-label="Cerrar">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <div class="font-medium">Notificaciones</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="text-sm space-y-1">
+                            <span class="block opacity-70">Minutos antes de iniciar</span>
+                            <input id="notifyBeforeStart" type="number" min="0"
+                                class="w-full px-3 py-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700" />
+                        </label>
+                        <label class="text-sm space-y-1">
+                            <span class="block opacity-70">Minutos antes de finalizar</span>
+                            <input id="notifyBeforeEnd" type="number" min="0"
+                                class="w-full px-3 py-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700" />
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="saveSettings"
+                            class="px-3 py-2 rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900">Guardar</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="font-medium">Permisos</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="askNotifyPerm"
+                            class="px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700">Permiso de
+                            notificaciones</button>
+                        <button id="askGeoPerm"
+                            class="px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700">Permiso de
+                            ubicación</button>
+                    </div>
+                    <div class="text-xs opacity-70">Los permisos requieren HTTPS o localhost.</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="./js/routines.js"></script>
 </body>

@@ -1,25 +1,35 @@
 import { getItem, setItem } from "./storage.js";
 import { qs, on, uid } from "./ui.js";
 
-const applyTheme = () => {
-    const theme = getItem("theme") || "light";
-    const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark"); else root.classList.remove("dark");
-};
-
-const toggleTheme = () => {
-    const saved = getItem("theme");
-    const next = saved === "dark" ? "light" : "dark";
-    setItem("theme", next);
-    applyTheme();
-};
-
 const initPage = () => {
-    applyTheme();
-    on(qs("#themeToggle"), "click", toggleTheme);
+    wireSettings();
     on(qs("#saveWidget"), "click", saveWidget);
     on(qs("#clearWidgets"), "click", clearWidgets);
     renderList();
+};
+
+const wireSettings = () => {
+    const settingsBtn = qs("#settingsBtn");
+    const modal = qs("#settingsModal");
+    const closeBtn = qs("#settingsClose");
+    const saveSettings = qs("#saveSettings");
+    const askNotifyPerm = qs("#askNotifyPerm");
+    const ns = getItem("notifyBeforeStart") ?? 10;
+    const ne = getItem("notifyBeforeEnd") ?? 5;
+    const nsEl = qs("#notifyBeforeStart");
+    const neEl = qs("#notifyBeforeEnd");
+    if (nsEl) nsEl.value = ns;
+    if (neEl) neEl.value = ne;
+    on(settingsBtn, "click", () => { if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); } });
+    on(closeBtn, "click", () => { if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } });
+    on(saveSettings, "click", () => {
+        const v1 = Number(nsEl?.value || 10);
+        const v2 = Number(neEl?.value || 5);
+        setItem("notifyBeforeStart", Math.max(0, v1));
+        setItem("notifyBeforeEnd", Math.max(0, v2));
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    });
+    on(askNotifyPerm, "click", async () => { try { await Notification.requestPermission(); } catch { } });
 };
 
 const readForm = () => {

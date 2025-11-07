@@ -1,19 +1,6 @@
 import { getItem, setItem } from "./storage.js";
 import { qs, qsa, on, uid, todayKey, hhmmToMinutes, minutesToTop } from "./ui.js";
 
-const themeToggle = () => {
-    const saved = getItem("theme");
-    const next = saved === "dark" ? "light" : "dark";
-    setItem("theme", next);
-    applyTheme();
-};
-
-const applyTheme = () => {
-    const theme = getItem("theme") || "light";
-    const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark"); else root.classList.remove("dark");
-};
-
 const ensureBootstrapData = () => {
     const routines = getItem("routines") || [];
     const widgets = getItem("widgets") || [];
@@ -341,8 +328,7 @@ const currentDateText = () => {
 
 const initHome = () => {
     ensureBootstrapData();
-    applyTheme();
-    on(qs("#themeToggle"), "click", themeToggle);
+    wireSettings();
     renderWidgetsOnHome();
     hoursColumn();
     dayGridLayout();
@@ -350,6 +336,108 @@ const initHome = () => {
     currentDateText();
     timeNeedle();
     setInterval(timeNeedle, 30000);
+    startNotificationScheduler();
 };
 
 document.addEventListener("DOMContentLoaded", initHome);
+
+const wireSettings = () => {
+    const settingsBtn = qs("#settingsBtn");
+    const modal = qs("#settingsModal");
+    const closeBtn = qs("#settingsClose");
+    const saveSettings = qs("#saveSettings");
+    const askNotifyPerm = qs("#askNotifyPerm");
+    const askGeoPerm = qs("#askGeoPerm");
+    const ns = getItem("notifyBeforeStart") ?? 10;
+    const ne = getItem("notifyBeforeEnd") ?? 5;
+    const nsEl = qs("#notifyBeforeStart");
+    const neEl = qs("#notifyBeforeEnd");
+    if (nsEl) nsEl.value = ns;
+    if (neEl) neEl.value = ne;
+    on(settingsBtn, "click", () => { if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); } });
+    on(closeBtn, "click", () => { if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } });
+    on(saveSettings, "click", () => {
+        const v1 = Number(nsEl?.value || 10);
+        const v2 = Number(neEl?.value || 5);
+        setItem("notifyBeforeStart", Math.max(0, v1));
+        setItem("notifyBeforeEnd", Math.max(0, v2));
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    });
+    on(askNotifyPerm, "click", async () => { try { await Notification.requestPermission(); updatePermStates(); } catch { } });
+    on(askGeoPerm, "click", async () => {
+        try {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(() => updatePermStates(), () => updatePermStates(), { enableHighAccuracy: true, timeout: 8000 });
+        } catch { }
+    });
+
+    const updateButtonStyle = (el, active, label) => {
+        if (!el) return;
+        el.textContent = label;
+        el.className = active
+            ? "px-3 py-2 rounded-md border border-emerald-500 text-emerald-600"
+            : "px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700";
+    };
+
+    const updatePermStates = async () => {
+        try {
+            const notif = Notification?.permission === "granted";
+            updateButtonStyle(askNotifyPerm, notif, notif ? "Notificaciones: activas" : "Permiso de notificaciones");
+        } catch { }
+        try {
+            if (navigator.permissions) {
+                const geo = await navigator.permissions.query({ name: "geolocation" });
+                const granted = geo.state === "granted";
+                updateButtonStyle(askGeoPerm, granted, granted ? "Ubicación: activa" : "Permiso de ubicación");
+                geo.onchange = () => updatePermStates();
+            } else {
+                updateButtonStyle(askGeoPerm, false, "Permiso de ubicación");
+            }
+        } catch {
+            updateButtonStyle(askGeoPerm, false, "Permiso de ubicación");
+        }
+    };
+    updatePermStates();
+};
+
+const startNotificationScheduler = () => {
+    const tick = () => {
+        if (Notification?.permission !== "granted") return;
+        const routineId = getItem("activeRoutineId") || "";
+        const routines = getItem("routines") || [];
+        const routine = routines.find(r => r.id === routineId);
+        if (!routine) return;
+        const key = todayKey();
+        const events = routine.days?.[key] || [];
+        const beforeStart = Number(getItem("notifyBeforeStart") ?? 10);
+        const beforeEnd = Number(getItem("notifyBeforeEnd") ?? 5);
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const dateKey = now.toISOString().slice(0, 10);
+        const notifKey = `notified:${dateKey}`;
+        const notified = getItem(notifKey) || {};
+        events.forEach(ev => {
+            const s = hhmmToMinutes(ev.start);
+            const e = hhmmToMinutes(ev.end);
+            const nsMin = Math.max(0, s - beforeStart);
+            const neMin = Math.max(0, e - beforeEnd);
+            if (nowMin >= nsMin && nowMin < nsMin + 1) {
+                const id = ev.id + "_start";
+                if (!notified[id]) {
+                    new Notification(ev.title || "Evento", { body: "Próximo inicio " + ev.start });
+                    notified[id] = true;
+                }
+            }
+            if (nowMin >= neMin && nowMin < neMin + 1) {
+                const id2 = ev.id + "_end";
+                if (!notified[id2]) {
+                    new Notification(ev.title || "Evento", { body: "Próximo fin " + ev.end });
+                    notified[id2] = true;
+                }
+            }
+        });
+        setItem(notifKey, notified);
+    };
+    tick();
+    setInterval(tick, 60000);
+};

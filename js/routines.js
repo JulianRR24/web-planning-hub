@@ -4,24 +4,9 @@ import { qs, qsa, on, uid, days, dayName } from "./ui.js";
 const state = { editingId: "", buffer: null, editingEventId: "" };
 
 const initPage = () => {
-  applyTheme();
-  on(qs("#themeToggle"), "click", toggleTheme);
   mountDaySelect();
   renderRoutines();
   wireEditor();
-};
-
-const applyTheme = () => {
-  const theme = getItem("theme") || "light";
-  const root = document.documentElement;
-  if (theme === "dark") root.classList.add("dark"); else root.classList.remove("dark");
-};
-
-const toggleTheme = () => {
-  const saved = getItem("theme");
-  const next = saved === "dark" ? "light" : "dark";
-  setItem("theme", next);
-  applyTheme();
 };
 
 const emptyRoutine = () => ({ id: uid("r_"), name: "", days: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } });
@@ -55,17 +40,18 @@ const addEventToBuffer = () => {
   const start = normalizeTime(qs("#eventStart").value);
   const end = normalizeTime(qs("#eventEnd").value);
   const title = qs("#eventTitle").value.trim();
+  const desc = (qs("#eventDesc")?.value || "").trim();
   const category = qs("#eventCategory").value.trim();
   const color = qs("#eventColor").value || "#c7d2fe";
   if (!title) return;
   const buf = state.buffer || emptyRoutine();
   if (state.editingEventId) {
-    buf.days[day] = buf.days[day].map(x => x.id === state.editingEventId ? { ...x, start, end, title, category, color } : x).sort((a, b) => a.start.localeCompare(b.start));
+    buf.days[day] = buf.days[day].map(x => x.id === state.editingEventId ? { ...x, start, end, title, desc, category, color } : x).sort((a, b) => a.start.localeCompare(b.start));
     state.editingEventId = "";
     const btn = qs("#addEventBtn");
     if (btn) btn.textContent = "Agregar evento";
   } else {
-    const ev = { id: uid("e_"), start, end, title, category, color };
+    const ev = { id: uid("e_"), start, end, title, desc, category, color };
     buf.days[day] = [...buf.days[day], ev].sort((a, b) => a.start.localeCompare(b.start));
   }
   state.buffer = buf;
@@ -85,7 +71,14 @@ const renderDayEvents = () => {
     t.textContent = ev.start + " - " + ev.end;
     const d = document.createElement("div");
     d.className = "flex-1 text-sm";
-    d.textContent = ev.title;
+    const titleEl = document.createElement("div");
+    titleEl.className = "font-medium";
+    titleEl.textContent = ev.title;
+    const descEl = document.createElement("div");
+    descEl.className = "whitespace-pre-wrap opacity-80";
+    descEl.textContent = ev.desc || "";
+    d.appendChild(titleEl);
+    d.appendChild(descEl);
     const c = document.createElement("div");
     c.className = "w-5 h-5 rounded";
     c.style.background = ev.color;
@@ -97,6 +90,7 @@ const renderDayEvents = () => {
       qs("#eventStart").value = ev.start;
       qs("#eventEnd").value = ev.end;
       qs("#eventTitle").value = ev.title;
+      if (qs("#eventDesc")) qs("#eventDesc").value = ev.desc || "";
       qs("#eventCategory").value = ev.category || "";
       qs("#eventColor").value = ev.color || "#c7d2fe";
       state.editingEventId = ev.id;
@@ -230,6 +224,29 @@ const wireEditor = () => {
   on(qs("#routineDay"), "change", () => { state.editingEventId = ""; const btn = qs("#addEventBtn"); if (btn) btn.textContent = "Agregar evento"; renderDayEvents(); });
   on(qs("#exportRoutines"), "click", exportJSON);
   on(qs("#importRoutines"), "change", importJSON);
+  const settingsBtn = qs("#settingsBtn");
+  const modal = qs("#settingsModal");
+  const closeBtn = qs("#settingsClose");
+  const saveSettings = qs("#saveSettings");
+  const askNotifyPerm = qs("#askNotifyPerm");
+  const themeBtn = qs("#themeToggle");
+  const ns = getItem("notifyBeforeStart") ?? 10;
+  const ne = getItem("notifyBeforeEnd") ?? 5;
+  if (qs("#notifyBeforeStart")) qs("#notifyBeforeStart").value = ns;
+  if (qs("#notifyBeforeEnd")) qs("#notifyBeforeEnd").value = ne;
+  on(settingsBtn, "click", () => { if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); } });
+  on(closeBtn, "click", () => { if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } });
+  on(themeBtn, "click", toggleTheme);
+  on(saveSettings, "click", () => {
+    const v1 = Number(qs("#notifyBeforeStart").value || 10);
+    const v2 = Number(qs("#notifyBeforeEnd").value || 5);
+    setItem("notifyBeforeStart", Math.max(0, v1));
+    setItem("notifyBeforeEnd", Math.max(0, v2));
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+  });
+  on(askNotifyPerm, "click", async () => {
+    try { await Notification.requestPermission(); } catch { }
+  });
 };
 
 const exportJSON = () => {
