@@ -1,99 +1,113 @@
-# Web Planning Hub
+# Planning HUB
 
-Una aplicación web de planificación personal modular y receptiva diseñada para usuarios con horarios no tradicionales (turnos rotativos, horarios familiares complejos). La Fase 1 ofrece una interfaz de usuario estática con navegación mobile-first y un panel de widgets interactivos.
+Plataforma web integral para gestión de rutinas, tareas y widgets personalizables con soporte para temas claro/oscuro. Diseñada para ofrecer una experiencia de usuario fluida y personalizable para la organización personal y profesional.
 
-<img width="367" height="823" alt="image" src="https://github.com/user-attachments/assets/76f159a1-7529-4f3c-8a1f-c086f8846984" />
+## 🚀 Características Principales
 
+- **Gestión de Rutinas**
+  - Crea y gestiona múltiples rutinas diarias
+  - Horarios personalizables con colores
+  - Vista de agenda diaria con indicador de hora actual
 
-## Visión General
-- Estado: Fase 1 (HTML + CSS estático) completada y alineada con la visión de diseño.
-- Navegación: Menú inferior fijo con 4 pantallas principales.
-- Páginas:
-  - Inicio (index.html): Widgets compactos 2x2 + agenda diaria debajo.
-  - Rutinas (rutinas.html): Vista de agenda + selector de rutinas + enlace a gestión de rutinas.
-  - Gestionar Rutinas (gestionar-rutinas.html): Lista estática CRUD.
-  - Widgets (widgets.html): Panel de widgets interactivos; todos los elementos son clicables.
-  - Lista del Mercado (mercado.html): Lista de compras simple con CTA.
-  - Configuración (config.html): Ajustes simulados para uso futuro.
+- **Widgets Personalizables**
+  - **Mercado**: Sigue los indicadores financieros en tiempo real
+  - **Notas**: Toma notas rápidas y haz listas de tareas
+  - **Clima**: Consulta el pronóstico del tiempo actual
+  - **Pico y Placa**: Verifica restricciones de movilidad
+  - **Calidad del Aire**: Monitorea la calidad del aire en tu ciudad
 
-## Características Principales (Fase 1)
-- Interfaz mobile-first usando Tailwind CDN y un sistema de diseño personalizado ligero.
-- Navegación inferior con 4 pestañas consistentes: Inicio, Rutinas, Widgets, Configuración.
-- Widgets interactivos mediante etiquetas de anclaje, que enlazan a páginas internas o recursos externos.
-- Línea de tiempo de agenda diaria con eventos de ejemplo y un indicador estático de hora actual.
+- **Interfaz de Usuario**
+  - Tema claro/oscuro con persistencia
+  - Diseño responsive para móviles y escritorio
+  - Navegación intuitiva entre secciones
 
-## Tecnologías Utilizadas
-- Maquetado/Estilos: HTML5, Tailwind CSS (CDN), variables CSS personalizadas (styles.css).
-- JavaScript: Archivos de marcador de posición para futuras fases (sin lógica activa aún).
-- Sin herramientas de compilación necesarias; los archivos estáticos son directamente visibles en un navegador.
+## 🛠️ Tecnologías Utilizadas
 
-## Estructura del Proyecto
+- **Frontend**
+  - HTML5 semántico
+  - CSS3 con Tailwind CSS
+  - JavaScript Vanilla (ES6+)
+  - APIs: OpenWeatherMap, Alpha Vantage
+
+- **Almacenamiento**
+  - localStorage para persistencia de datos
+  - Estructura de datos optimizada
+
+## 📁 Estructura del Proyecto
+
 ```
 web-planning-hub/
-├─ index.html                 # Inicio: Widgets 2x2 + agenda diaria
-├─ rutinas.html               # Rutinas: agenda + selector + enlace a CRUD
-├─ gestionar-rutinas.html     # Gestionar rutinas: lista CRUD estática
-├─ widgets.html               # Panel: cuadrícula de widgets interactivos
-├─ mercado.html               # Lista del mercado: lista de verificación básica
-├─ config.html                # Configuración: opciones futuras
-├─ css/
-│  └─ styles.css             # Variables CSS y clases reutilizables
-├─ js/
-│  ├─ main.js
-│  ├─ rutinas.js
-│  ├─ widgets.js
-│  └─ utils.js
-└─ assets/                    # (reservado)
+├── css/
+│   └── style.css           # Estilos personalizados y variables CSS
+├── js/
+│   ├── app.js             # Lógica principal de la aplicación
+│   ├── storage.js         # Manejo del almacenamiento local
+│   ├── ui.js              # Utilidades de interfaz de usuario
+│   ├── rutinas.js         # Gestión de rutinas y agenda
+│   └── widgets.js         # Lógica de widgets
+├── index.html            # Página principal con widgets y agenda
+├── rutinas.html          # Gestión de rutinas
+├── widgets.html          # Configuración de widgets
+├── mercado.html          # Información de mercado
+└── README.md            # Documentación del proyecto
 ```
 
-## Sistema de Diseño
-- Variables CSS en `:root` para colores, radios, sombras y espaciados.
-- Clases reutilizables:
-  - `.container` utilidad de diseño
-  - `.card` superficie elevada con borde y radio
-  - `.button`, `.button-primary`, `.button-secondary`
-- Iconos mediante SVGs en línea.
+## 🚀 Cómo Empezar
 
-## Accesibilidad
-- Diseño mobile-first y objetivos táctiles grandes.
-- Etiquetas ARIA en iconos interactivos y elementos de navegación.
-- Próximos pasos: estados de enfoque, `aria-current` en navegación, navegación por teclado y validación de contraste de color.
+1. **Requisitos**
+   - Navegador web moderno (Chrome, Firefox, Edge, Safari)
+   - Conexión a Internet (para APIs de clima y mercado)
 
-## Cómo Ejecutar
-- Abre `index.html` en tu navegador.
-- Navega usando el menú inferior.
-- Los enlaces externos se abren en una nueva pestaña cuando es apropiado (ej. Pico y Placa, Clima).
+2. **Instalación**
+   ```bash
+   # Clonar el repositorio
+   git clone https://github.com/tu-usuario/web-planning-hub.git
+   cd web-planning-hub
+   ```
 
-## Hoja de Ruta
-- Fase 1 (actual): Interfaz de usuario estática, páginas responsivas, widgets interactivos. ✅
-- Fase 2: Interactividad (JavaScript)
-  - Enrutamiento SPA basado en hash (sin recargas completas de página).
-  - Capa de estado con `localStorage` para:
-    - Lista de rutinas y rutina activa.
-    - Widgets favoritos (mostrar 2x2 en Inicio).
-    - CRUD de lista de mercado.
-    - Preferencias básicas (tema, idioma, ciudad).
-  - Indicador dinámico de hora actual en la agenda.
-  - Widgets respaldados por APIs (ej. clima) con fallos elegantes.
-- Fase 3: Persistencia y Usuarios (Backend)
-  - Migrar estado de `localStorage` a Firebase/Supabase.
-  - Autenticación (email/contraseña, OAuth).
-  - Sincronización entre dispositivos, reglas de seguridad y gestión de cuotas.
-- Fase 4: Inteligencia y Automatización
-  - Sugerencias inteligentes para horarios.
-  - Recordatorios y notificaciones inteligentes.
-  - Relleno automático de agenda basado en patrones.
+3. **Uso**
+   - Abre `index.html` en tu navegador
+   - Navega entre las diferentes secciones usando el menú superior
+   - Personaliza tu experiencia activando/desactivando widgets
 
-## Modelo de Datos Previsto (Fase 2)
-- `preferenciasUsuario`: `{ tema, idioma, ciudad, formatoHora }`
-- `rutinas`: `[{ id, nombre, icono, horario: [{ id, titulo, inicio, fin, color }], estaActiva }]`
-- `idRutinaActiva`: `cadena`
-- `catalogoWidgets`: `[{ id, tipo, nombre, configuracion }]`
-- `widgetsFavoritos`: `[{ id, orden, configuracionPersonalizada }]` (máx. 4 para Inicio)
-- `listaMercado`: `[{ id, texto, hecho }]`
+## 🎨 Personalización
 
-## Contribución
-- Mantén el código limpio, modular y autoexplicativo.
-- Usa importaciones explícitas y evita el uso de comodines.
-- Mantén un formato y nomenclatura consistentes.
-- Abre issues para discutir cambios importantes antes de implementarlos.
+### Temas
+- Haz clic en el botón "Tema" en la barra de navegación para alternar entre modo claro y oscuro
+- La preferencia se guarda automáticamente
+
+### Widgets
+1. Ve a la sección "Widgets"
+2. Activa/desactiva los widgets que desees mostrar
+3. Arrástralos para cambiar su orden
+4. Los cambios se guardan automáticamente
+
+## 📱 Compatibilidad
+
+- Navegadores modernos (últimas 2 versiones)
+- Diseño responsive para móviles, tablets y escritorio
+- Soporte para modo oscuro del sistema
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas. Por favor, lee nuestras pautas de contribución antes de enviar cambios.
+
+1. Haz un fork del proyecto
+2. Crea una rama para tu característica (`git checkout -b feature/nueva-funcionalidad`)
+3. Haz commit de tus cambios (`git commit -m 'Añade nueva funcionalidad'`)
+4. Haz push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más información.
+
+## ✨ Créditos
+
+- [Tailwind CSS](https://tailwindcss.com/)
+- [OpenWeatherMap](https://openweathermap.org/)
+- [Alpha Vantage](https://www.alphavantage.co/)
+
+---
+
+Desarrollado con ❤️ para una mejor organización personal
