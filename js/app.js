@@ -150,16 +150,61 @@ const loadWeatherInto = (container) => {
         container.className = "flex items-center justify-center p-3 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400";
         container.textContent = msg;
     };
+    const translateSummary = (s) => {
+        if (!s) return "";
+        const m = {
+            "Clear": "Despejado",
+            "Sunny": "Soleado",
+            "Partly cloudy": "Parcialmente nublado",
+            "Mostly cloudy": "Mayormente nublado",
+            "Cloudy": "Nublado",
+            "Overcast": "Cubierto",
+            "Fog": "Niebla",
+            "Mist": "Neblina",
+            "Haze": "Calima",
+            "Drizzle": "Llovizna",
+            "Light rain": "Lluvia ligera",
+            "Rain": "Lluvia",
+            "Moderate rain": "Lluvia moderada",
+            "Heavy rain": "Lluvia intensa",
+            "Thunderstorm": "Tormenta",
+            "Snow": "Nieve",
+            "Light snow": "Nieve ligera",
+            "Sleet": "Aguanieve",
+            "Windy": "Viento"
+        };
+        return m[s] || s;
+    };
+
+    const svgNode = (s) => {
+        const d = document.createElement("div");
+        d.innerHTML = s.trim();
+        return d.firstChild;
+    };
+    const iconSvg = (code) => {
+        const k = String(code || "").toLowerCase();
+        if (k.includes("thunder")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5h-3"/><path d="M13 11l-3 5h3l-2 4"/></svg>');
+        if (k.includes("rain") || k.includes("drizzle")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5H7"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg>');
+        if (k.includes("snow") || k.includes("sleet")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5H7"/><path d="M10 18l2 2m0-2l-2 2M14 18l2 2m0-2l-2 2"/></svg>');
+        if (k.includes("fog") || k.includes("mist") || k.includes("haze")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h12M2 13h18M3 16h14"/><path d="M7 9a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 3a3 3 0 1 1 1 5H7"/></svg>');
+        if (k.includes("wind")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10a3 3 0 1 0-3-3"/><path d="M5 16h8a3 3 0 1 1-3 3"/></svg>');
+        if (k.includes("partly")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13"/><path d="M7 16h10a3 3 0 0 0 0-6 5 5 0 0 0-9 2"/></svg>');
+        if (k.includes("overcast") || k.includes("cloud")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16h10a3 3 0 0 0 0-6 5 5 0 0 0-9 2"/></svg>');
+        if (k.includes("clear") || k.includes("sun")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M17.7 6.3l1.4-1.4M4.9 19.1l1.4-1.4"/></svg>');
+        return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18"/><circle cx="12" cy="12" r="4"/></svg>');
+    };
+
     const renderData = (data, label) => {
         const t = Math.round(data.current?.temperature ?? 0);
         const desc = data.current?.summary || "";
+        const descEs = translateSummary(desc);
         const icon = data.current?.icon || "";
         container.innerHTML = "";
         const box = document.createElement("div");
         box.className = "flex items-center gap-3 w-full sm:w-auto";
         const ico = document.createElement("div");
-        ico.className = "px-2 py-1 rounded-md bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 text-xs";
-        ico.textContent = icon;
+        ico.className = "w-9 h-9 flex items-center justify-center rounded-full bg-slate-200 text-lg dark:bg-slate-700";
+        ico.appendChild(iconSvg(icon));
         const texts = document.createElement("div");
         texts.className = "flex flex-col";
         const line1 = document.createElement("div");
@@ -167,7 +212,7 @@ const loadWeatherInto = (container) => {
         line1.textContent = t + "°C";
         const line2 = document.createElement("div");
         line2.className = "text-xs opacity-80";
-        line2.textContent = desc || "No disponible";
+        line2.textContent = descEs || "No disponible";
         const line3 = document.createElement("div");
         line3.className = "text-xs opacity-60";
         line3.textContent = label || "Tu ubicación";
@@ -191,7 +236,7 @@ const loadWeatherInto = (container) => {
 
     const fetchWeather = async (lat, lon) => {
         try {
-            const params = new URLSearchParams({ lat: String(lat), lon: String(lon), sections: "current", units: "metric", lang: "es", key });
+            const params = new URLSearchParams({ lat: String(lat), lon: String(lon), sections: "current", units: "metric", key });
             const url = "https://www.meteosource.com/api/v1/free/point?" + params.toString();
             const res = await fetch(url);
             if (!res.ok) throw new Error("fail");
@@ -213,7 +258,7 @@ const loadWeatherInto = (container) => {
             fetchWeather(latitude, longitude);
         },
         () => showError("No se pudo obtener tu ubicación."),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 120000 }
     );
 };
 
