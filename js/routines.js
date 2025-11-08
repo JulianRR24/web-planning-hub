@@ -1,9 +1,10 @@
-import { getItem, setItem } from "./storage.js";
+import { getItem, setItem, syncFromRemote } from "./storage.js";
 import { qs, qsa, on, uid, days, dayName } from "./ui.js";
 
 const state = { editingId: "", buffer: null, editingEventId: "" };
 
-const initPage = () => {
+const initPage = async () => {
+  await syncFromRemote();
   mountDaySelect();
   renderRoutines();
   wireEditor();
@@ -229,14 +230,12 @@ const wireEditor = () => {
   const closeBtn = qs("#settingsClose");
   const saveSettings = qs("#saveSettings");
   const askNotifyPerm = qs("#askNotifyPerm");
-  const themeBtn = qs("#themeToggle");
   const ns = getItem("notifyBeforeStart") ?? 10;
   const ne = getItem("notifyBeforeEnd") ?? 5;
   if (qs("#notifyBeforeStart")) qs("#notifyBeforeStart").value = ns;
   if (qs("#notifyBeforeEnd")) qs("#notifyBeforeEnd").value = ne;
   on(settingsBtn, "click", () => { if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); } });
   on(closeBtn, "click", () => { if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } });
-  on(themeBtn, "click", toggleTheme);
   on(saveSettings, "click", () => {
     const v1 = Number(qs("#notifyBeforeStart").value || 10);
     const v2 = Number(qs("#notifyBeforeEnd").value || 5);

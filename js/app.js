@@ -1,4 +1,4 @@
-import { getItem, setItem } from "./storage.js";
+import { getItem, setItem, syncFromRemote } from "./storage.js";
 import { qs, qsa, on, uid, todayKey, hhmmToMinutes, minutesToTop } from "./ui.js";
 
 let swReg = null;
@@ -6,7 +6,7 @@ let swReg = null;
 const registerServiceWorker = async () => {
     try {
         if (!('serviceWorker' in navigator)) return;
-        swReg = await navigator.serviceWorker.register('./service-worker.js');
+        swReg = await navigator.serviceWorker.register('./js/service-worker.js');
         await navigator.serviceWorker.ready;
     } catch { }
 };
@@ -181,8 +181,8 @@ const loadWeatherInto = (container) => {
     const iconSvg = (code) => {
         const k = String(code || "").toLowerCase();
         if (k.includes("thunder")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5h-3"/><path d="M13 11l-3 5h3l-2 4"/></svg>');
-        if (k.includes("rain") || k.includes("drizzle")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5H7"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg>');
-        if (k.includes("snow") || k.includes("sleet")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 9a3 3 0 1 1 1 5H7"/><path d="M10 18l2 2m0-2l-2 2M14 18l2 2m0-2l-2 2"/></svg>');
+        if (k.includes("rain") || k.includes("drizzle")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16h10a3 3 0 0 0 0-6 5 5 0 0 0-9 2"/></svg>');
+        if (k.includes("snow") || k.includes("sleet")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16h10a3 3 0 0 0 0-6 5 5 0 0 0-9 2"/></svg>');
         if (k.includes("fog") || k.includes("mist") || k.includes("haze")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h12M2 13h18M3 16h14"/><path d="M7 9a4 4 0 1 1 .9-7.9A5 5 0 0 1 17 3a3 3 0 1 1 1 5H7"/></svg>');
         if (k.includes("wind")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10a3 3 0 1 0-3-3"/><path d="M5 16h8a3 3 0 1 1-3 3"/></svg>');
         if (k.includes("partly")) return svgNode('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13"/><path d="M7 16h10a3 3 0 0 0 0-6 5 5 0 0 0-9 2"/></svg>');
@@ -336,7 +336,8 @@ const currentDateText = () => {
     el.textContent = now.toLocaleDateString("es-CO", { weekday: "long", day: "2-digit", month: "long" });
 };
 
-const initHome = () => {
+const initHome = async () => {
+    await syncFromRemote();
     ensureBootstrapData();
     wireSettings();
     registerServiceWorker();
