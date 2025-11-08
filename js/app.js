@@ -1,6 +1,16 @@
 import { getItem, setItem } from "./storage.js";
 import { qs, qsa, on, uid, todayKey, hhmmToMinutes, minutesToTop } from "./ui.js";
 
+let swReg = null;
+
+const registerServiceWorker = async () => {
+    try {
+        if (!('serviceWorker' in navigator)) return;
+        swReg = await navigator.serviceWorker.register('./service-worker.js');
+        await navigator.serviceWorker.ready;
+    } catch { }
+};
+
 const ensureBootstrapData = () => {
     const routines = getItem("routines") || [];
     const widgets = getItem("widgets") || [];
@@ -329,6 +339,7 @@ const currentDateText = () => {
 const initHome = () => {
     ensureBootstrapData();
     wireSettings();
+    registerServiceWorker();
     renderWidgetsOnHome();
     hoursColumn();
     dayGridLayout();
@@ -363,7 +374,16 @@ const wireSettings = () => {
         setItem("notifyBeforeEnd", Math.max(0, v2));
         if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
     });
-    on(askNotifyPerm, "click", async () => { try { await Notification.requestPermission(); updatePermStates(); } catch { } });
+    on(askNotifyPerm, "click", async () => {
+        try {
+            const res = await Notification.requestPermission();
+            updatePermStates();
+            if (res === 'granted') {
+                const body = { body: 'Notificaciones activadas' };
+                if (swReg?.showNotification) swReg.showNotification('AgendaSmart', body); else new Notification('AgendaSmart', body);
+            }
+        } catch { }
+    });
     on(askGeoPerm, "click", async () => {
         try {
             if (!navigator.geolocation) return;
@@ -416,24 +436,23 @@ const startNotificationScheduler = () => {
         const dateKey = now.toISOString().slice(0, 10);
         const notifKey = `notified:${dateKey}`;
         const notified = getItem(notifKey) || {};
+        const notify = (title, options) => {
+            try {
+                if (swReg?.showNotification) swReg.showNotification(title, options); else new Notification(title, options);
+            } catch { }
+        };
         events.forEach(ev => {
             const s = hhmmToMinutes(ev.start);
             const e = hhmmToMinutes(ev.end);
             const nsMin = Math.max(0, s - beforeStart);
             const neMin = Math.max(0, e - beforeEnd);
-            if (nowMin >= nsMin && nowMin < nsMin + 1) {
+            if (nowMin >= nsMin) {
                 const id = ev.id + "_start";
-                if (!notified[id]) {
-                    new Notification(ev.title || "Evento", { body: "Próximo inicio " + ev.start });
-                    notified[id] = true;
-                }
+                if (!notified[id]) { notify(ev.title || "Evento", { body: "Próximo inicio " + ev.start }); notified[id] = true; }
             }
-            if (nowMin >= neMin && nowMin < neMin + 1) {
+            if (nowMin >= neMin) {
                 const id2 = ev.id + "_end";
-                if (!notified[id2]) {
-                    new Notification(ev.title || "Evento", { body: "Próximo fin " + ev.end });
-                    notified[id2] = true;
-                }
+                if (!notified[id2]) { notify(ev.title || "Evento", { body: "Próximo fin " + ev.end }); notified[id2] = true; }
             }
         });
         setItem(notifKey, notified);

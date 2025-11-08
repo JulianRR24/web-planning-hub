@@ -1,0 +1,9 @@
+{
+    "name": "AgendaSmart",
+    "short_name": "AgendaSmart",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0f172a",
+    "lang": "es-CO"
+}
