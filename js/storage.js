@@ -2,6 +2,19 @@ import { supabase } from "./supabase.js";
 
 const NS = "agendasmart:";
 
+export const clearAppData = () => {
+    try {
+        // Usamos Object.keys para evitar problemas de índice al eliminar
+        Object.keys(localStorage)
+            .filter(key => key.startsWith(NS))
+            .forEach(key => localStorage.removeItem(key));
+        return true;
+    } catch (error) {
+        console.error('Error al limpiar datos locales:', error);
+        return false;
+    }
+};
+
 const keyPrefix = (k) => NS + k;
 const parseJson = (s) => { try { return JSON.parse(s); } catch { return null; } };
 const toJson = (v) => { try { return JSON.stringify(v); } catch { return null; } };
