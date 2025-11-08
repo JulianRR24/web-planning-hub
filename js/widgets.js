@@ -2,7 +2,7 @@ import { getItem, setItem, syncFromRemote } from "./storage.js";
 import { qs, on, uid } from "./ui.js";
 
 const initPage = async () => {
-    await syncFromRemote();
+    await syncFromRemote();  // Aseguramos que los datos estén sincronizados
     wireSettings();
     on(qs("#saveWidget"), "click", saveWidget);
     on(qs("#clearWidgets"), "click", clearWidgets);
