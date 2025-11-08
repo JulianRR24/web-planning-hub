@@ -1,8 +1,12 @@
 # Planning HUB
 
-Plataforma web integral para gestión de rutinas, tareas y widgets personalizables con soporte para temas claro/oscuro. Diseñada para ofrecer una experiencia de usuario fluida y personalizable para la organización personal y profesional.
+[![Vista previa en vivo](https://img.shields.io/badge/🌐-Ver%20en%20vivo-4CAF50?style=for-the-badge)](https://web-planning-hub.vercel.app/index.html)
+
+Plataforma web integral para gestión de rutinas, tareas y widgets personalizables con soporte para temas claro/oscuro. Diseñada para ofrecer una experiencia de usuario fluida y personalizable para la organización personal y profesional con sincronización en tiempo real entre dispositivos.
 
 ## 🚀 Características Principales
+
+🔗 **Acceso rápido**: [Ver aplicación en vivo](https://web-planning-hub.vercel.app/index.html)
 
 - **Gestión de Rutinas**
   - Crea y gestiona múltiples rutinas diarias
@@ -27,11 +31,30 @@ Plataforma web integral para gestión de rutinas, tareas y widgets personalizabl
   - HTML5 semántico
   - CSS3 con Tailwind CSS
   - JavaScript Vanilla (ES6+)
-  - APIs: OpenWeatherMap, Alpha Vantage
+  - APIs: OpenWeatherMap, Alpha Vantage, Supabase
 
 - **Almacenamiento**
-  - localStorage para persistencia de datos
+  - Sincronización en tiempo real con Supabase
+  - Caché local para funcionamiento offline
   - Estructura de datos optimizada
+  - Sincronización automática entre dispositivos
+
+## 🔄 Sincronización con Supabase
+
+La aplicación utiliza Supabase como backend para la sincronización en tiempo real de datos entre dispositivos. Los datos se almacenan en una tabla `kv` con el siguiente esquema:
+
+```sql
+CREATE TABLE kv (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL
+);
+
+-- Políticas de seguridad para acceso anónimo
+ALTER TABLE kv ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Acceso completo para anónimos" ON public.kv
+  FOR ALL USING (true);
+```
 
 ## 📁 Estructura del Proyecto
 
@@ -41,9 +64,10 @@ web-planning-hub/
 │   └── style.css           # Estilos personalizados y variables CSS
 ├── js/
 │   ├── app.js             # Lógica principal de la aplicación
-│   ├── storage.js         # Manejo del almacenamiento local
+│   ├── storage.js         # Manejo de almacenamiento local y sincronización con Supabase
+│   ├── supabase.js        # Configuración del cliente de Supabase
 │   ├── ui.js              # Utilidades de interfaz de usuario
-│   ├── rutinas.js         # Gestión de rutinas y agenda
+│   ├── routines.js        # Gestión de rutinas y agenda
 │   └── widgets.js         # Lógica de widgets
 ├── index.html            # Página principal con widgets y agenda
 ├── rutinas.html          # Gestión de rutinas
