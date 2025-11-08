@@ -337,18 +337,23 @@ const currentDateText = () => {
 };
 
 const initHome = async () => {
-    await syncFromRemote();
-    ensureBootstrapData();
-    wireSettings();
-    registerServiceWorker();
-    renderWidgetsOnHome();
-    hoursColumn();
-    dayGridLayout();
-    activeRoutineSelector();
-    currentDateText();
-    timeNeedle();
-    setInterval(timeNeedle, 30000);
-    startNotificationScheduler();
+    try {
+        // Forzar sincronización al cargar
+        await syncFromRemote(true);
+        ensureBootstrapData();
+        wireSettings();
+        registerServiceWorker();
+        renderWidgetsOnHome();
+        hoursColumn();
+        dayGridLayout();
+        activeRoutineSelector();
+        currentDateText();
+        timeNeedle();
+        setInterval(timeNeedle, 30000);
+        startNotificationScheduler();
+    } catch (error) {
+        console.error('Error al inicializar:', error);
+    }
 };
 
 document.addEventListener("DOMContentLoaded", initHome);

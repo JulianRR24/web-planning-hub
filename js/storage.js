@@ -35,24 +35,18 @@ const deleteRemote = async (k) => { try { const { error } = await supabase.from(
 const fetchRemote = async (k) => { try { const { data, error } = await supabase.from("kv").select("value").eq("key", k).maybeSingle(); if (error) return null; return data ? data.value : null; } catch { return null; } };
 const listRemoteKeys = async () => { try { const { data, error } = await supabase.from("kv").select("key"); if (error) return []; return (data || []).map(x => x.key).filter(k => typeof k === "string" && k.startsWith(NS)).map(k => k.substring(NS.length)); } catch { return []; } };
 
-// Modificar syncFromRemote
-export const syncFromRemote = async (force = false) => {
+// En storage.js, modificar la función syncFromRemote
+export const syncFromRemote = async (force = true) => {  // Cambiado a true por defecto
     try {
         const remoteKeys = await listRemoteKeys();
         for (const k of remoteKeys) {
             const full = keyPrefix(k);
             const remoteData = await fetchRemote(full);
-
+            
             if (remoteData === null) continue;
-
-            const localData = getLocal(full);
-
-            // Si forzamos o no hay datos locales, actualizar
-            if (force || localData === null) {
-                putLocal(full, remoteData);
-            }
-            // Aquí podrías agregar lógica de resolución de conflictos
-            // por ejemplo, comparar timestamps si los tienes
+            
+            // Siempre sobrescribir con datos remotos
+            putLocal(full, remoteData);
         }
         return true;
     } catch (error) {
