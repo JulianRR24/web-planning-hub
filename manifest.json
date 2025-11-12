@@ -1,6 +1,6 @@
 {
-    "name": "AgendaSmart",
-    "short_name": "AgendaSmart",
+    "name": "PlanningHub",
+    "short_name": "PlanningHub",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
