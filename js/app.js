@@ -12,12 +12,15 @@ const registerServiceWorker = async () => {
 };
 
 const ensureBootstrapData = () => {
-    const routines = getItem("routines") || [];
-    const widgets = getItem("widgets") || [];
-    if (!routines.length) setItem("routines", []);
-    if (!widgets.length) setItem("widgets", []);
-    if (!getItem("activeRoutineId")) setItem("activeRoutineId", "");
+    const routines = getItem("routines");
+    const widgets = getItem("widgets");
+    const activeRoutineId = getItem("activeRoutineId");
+
+    if (!Array.isArray(routines)) setItem("routines", []);
+    if (!Array.isArray(widgets)) setItem("widgets", []);
+    if (typeof activeRoutineId !== "string") setItem("activeRoutineId", "");
 };
+
 
 const renderWidgetsOnHome = () => {
     const grid = qs("#widgetsGrid");
@@ -338,8 +341,7 @@ const currentDateText = () => {
 
 const initHome = async () => {
     try {
-        // Forzar sincronización al cargar
-        await syncFromRemote(true);
+        // 1️⃣ Cargar interfaz inmediatamente con datos locales
         ensureBootstrapData();
         wireSettings();
         registerServiceWorker();
@@ -351,12 +353,26 @@ const initHome = async () => {
         timeNeedle();
         setInterval(timeNeedle, 30000);
         startNotificationScheduler();
+
+        // 2️⃣ Sincronizar con Supabase en segundo plano (sin bloquear)
+        requestIdleCallback(async () => {
+            const ok = await syncFromRemote(false);
+            if (ok) {
+                console.log("✅ Datos sincronizados con Supabase (en segundo plano)");
+                // Opcional: re-render si hubo cambios nuevos
+                renderWidgetsOnHome();
+                activeRoutineSelector();
+            } else {
+                console.warn("⚠️ Falló la sincronización (offline mode)");
+            }
+        });
     } catch (error) {
-        console.error('Error al inicializar:', error);
+        console.error("Error al inicializar:", error);
     }
 };
 
 document.addEventListener("DOMContentLoaded", initHome);
+
 
 const wireSettings = () => {
     const settingsBtn = qs("#settingsBtn");

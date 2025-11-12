@@ -72,12 +72,15 @@ export const setItem = (key, value) => {
     return ok;
 };
 
-export const removeItem = (key) => {
+export const removeItem = (key, remote = false) => {
     const k = keyPrefix(key);
     const ok = removeLocal(k);
-    deleteRemote(k);
+    if (remote) {
+        deleteRemote(k).catch(console.error);
+    }
     return ok;
 };
+
 
 export const keys = () => {
     const out = [];
