@@ -83,6 +83,24 @@ const isValidData = (data, key) => {
         }
     }
     
+    // lastVisit debe ser un día de la semana válido o vacío
+    if (key === 'lastVisit') {
+        const validDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        return validDays.includes(data) || data === '';
+    }
+    
+    // Para otras claves, si es un string, validar que no sea JSON corrupto
+    if (typeof data === 'string') {
+        try {
+            JSON.parse(data);
+            // Si es JSON válido, aceptarlo
+            return true;
+        } catch {
+            // Si no es JSON, pero es un string simple, aceptarlo
+            return true;
+        }
+    }
+    
     return true;
 };
 
@@ -244,6 +262,19 @@ const fetchRemote = async (k) => {
             if (data.value === '[object Object]') {
                 console.log('🔧 Corrigiendo [object Object]:', data.value);
                 return {}; // Devolver objeto vacío
+            }
+            
+            // Corregir objetos que se guardaron como string sin comillas
+            if (typeof data.value === 'string' && data.value.startsWith('{') && data.value.includes('true') && !data.value.includes('"')) {
+                console.log('🔧 Corrigiendo objeto sin comillas:', data.value);
+                try {
+                    // Agregar comillas a las claves
+                    const fixed = data.value.replace(/(\w+):/g, '"$1":');
+                    return JSON.parse(fixed);
+                } catch {
+                    console.log('🔧 No se pudo corregir objeto sin comillas, devolviendo objeto vacío');
+                    return {};
+                }
             }
             
             // Corregir strings que parecen objetos pero están mal formados
