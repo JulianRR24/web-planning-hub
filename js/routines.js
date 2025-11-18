@@ -35,8 +35,6 @@ const mountDaySelect = () => {
 const normalizeTime = (t) => t && t.length === 5 ? t : "00:00";
 
 const addEventToBuffer = () => {
-  const r = readFormRoutine();
-  if (!r) return;
   const day = qs("#routineDay").value;
   const start = normalizeTime(qs("#eventStart").value);
   const end = normalizeTime(qs("#eventEnd").value);
@@ -45,7 +43,10 @@ const addEventToBuffer = () => {
   const category = qs("#eventCategory").value.trim();
   const color = qs("#eventColor").value || "#c7d2fe";
   if (!title) return;
+  
+  // Asegurar que siempre hay un buffer válido
   const buf = state.buffer || emptyRoutine();
+  
   if (state.editingEventId) {
     buf.days[day] = buf.days[day].map(x => x.id === state.editingEventId ? { ...x, start, end, title, desc, category, color } : x).sort((a, b) => a.start.localeCompare(b.start));
     state.editingEventId = "";
