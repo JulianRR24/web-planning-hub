@@ -219,6 +219,15 @@ const deleteRoutine = (id) => {
 };
 
 const wireEditor = () => {
+  // Prevenir envío del formulario
+  const form = qs("#routineForm");
+  if (form) {
+    on(form, "submit", (e) => {
+      e.preventDefault();
+      return false;
+    });
+  }
+  
   on(qs("#newRoutineBtn"), "click", () => { state.editingId = ""; state.buffer = emptyRoutine(); state.editingEventId = ""; qs("#routineName").value = ""; const btn = qs("#addEventBtn"); if (btn) btn.textContent = "Agregar evento"; renderDayEvents(); });
   on(qs("#addEventBtn"), "click", addEventToBuffer);
   on(qs("#saveRoutineBtn"), "click", saveRoutine);
