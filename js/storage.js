@@ -248,14 +248,28 @@ const fetchRemote = async (k) => {
             console.log('🔧 Valor corrupto:', data.value);
             
             // Intentar limpiar datos corruptos comunes
-            if (data.value === 'sat' || data.value === 'sun' || data.value === 'mon' || data.value === 'tue' || data.value === 'wed' || data.value === 'thu' || data.value === 'fri') {
+            // Para lastVisit: si es un día de la semana, devolver directamente
+            if (data.value === '"sat"' || data.value === '"sun"' || data.value === '"mon"' || data.value === '"tue"' || data.value === '"wed"' || data.value === '"thu"' || data.value === '"fri"') {
                 console.log('🔧 Corrigiendo día de semana:', data.value);
+                return JSON.parse(data.value); // Parsear el string JSON para obtener el día
+            }
+            
+            // Para días sin comillas (caso raro)
+            if (data.value === 'sat' || data.value === 'sun' || data.value === 'mon' || data.value === 'tue' || data.value === 'wed' || data.value === 'thu' || data.value === 'fri') {
+                console.log('🔧 Corrigiendo día de semana sin comillas:', data.value);
                 return data.value; // Devolver el string directamente
             }
             
+            // Para arrays/objetos vacíos, intentar parsear
             if (data.value === '[]' || data.value === '{}') {
                 console.log('🔧 Corrigiendo array/object vacío:', data.value);
                 return JSON.parse(data.value); // Parsear correctamente
+            }
+            
+            // Para arrays/objetos vacíos con formato JSON correcto
+            if (data.value === '"[]"' || data.value === '"{}"') {
+                console.log('🔧 Corrigiendo array/object vacío con comillas:', data.value);
+                return JSON.parse(data.value); // Parsear el string JSON
             }
             
             // Corregir datos notificados que se guardaron como [object Object]
