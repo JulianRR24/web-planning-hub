@@ -63,6 +63,12 @@ const isValidData = (data, key) => {
         }
     }
     
+    // activeRoutineId debe ser string o vacío
+    if (key === 'activeRoutineId') {
+        const parsed = typeof data === 'string' ? data : String(data);
+        return parsed === '' || (typeof parsed === 'string' && parsed.trim().length > 0);
+    }
+    
     return true;
 };
 
