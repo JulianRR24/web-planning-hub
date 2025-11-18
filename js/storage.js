@@ -42,6 +42,8 @@ export const forceSync = async () => {
 
 // Validar integridad de datos
 const isValidData = (data, key) => {
+    console.log('🔍 isValidData llamado:', { data, type: typeof data, key });
+    
     if (data === null || data === undefined) return false;
     
     // Validar JSON
