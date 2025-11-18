@@ -64,6 +64,14 @@ const isValidData = (data, key) => {
         return isValid;
     }
     
+    // lastVisit debe ser un día de la semana válido o vacío (validar ANTES de JSON)
+    if (key === 'lastVisit') {
+        const validDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const isValid = validDays.includes(data) || data === '';
+        console.log('🔍 Validando lastVisit:', { data, isValid, validDays });
+        return isValid;
+    }
+    
     // Validar JSON (solo para otras claves)
     if (typeof data === 'string') {
         try {
@@ -81,14 +89,6 @@ const isValidData = (data, key) => {
         } catch {
             return false;
         }
-    }
-    
-    // lastVisit debe ser un día de la semana válido o vacío
-    if (key === 'lastVisit') {
-        const validDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-        const isValid = validDays.includes(data) || data === '';
-        console.log('🔍 Validando lastVisit:', { data, isValid, validDays });
-        return isValid;
     }
     
     // Para otras claves, si es un string, validar que no sea JSON corrupto
