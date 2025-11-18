@@ -5,7 +5,17 @@ const initPage = async () => {
     await syncFromRemote();  // Aseguramos que los datos estén sincronizados
     wireSettings();
     on(qs("#saveWidget"), "click", saveWidget);
-    on(qs("#clearWidgets"), "click", clearWidgets);
+    on(qs("#deleteWidgetBtn"), "click", clearWidgets);
+    
+    // Prevenir recarga del formulario
+    const form = qs("#widgetForm");
+    if (form) {
+        on(form, "submit", (e) => {
+            e.preventDefault();
+            return false;
+        });
+    }
+    
     renderList();
 };
 
@@ -35,8 +45,8 @@ const wireSettings = () => {
 
 const readForm = () => {
     const type = qs("#widgetType").value;
-    const title = qs("#widgetTitle").value.trim() || type;
-    const order = Math.min(4, Math.max(1, Number(qs("#widgetOrder").value || 1)));
+    const title = qs("#widget-name").value.trim() || type;
+    const order = Math.min(4, Math.max(1, Number(qs("#widget-order").value || 1)));
     const enabled = qs("#widgetEnabled").checked;
     return { id: uid("w_"), type, title, order, enabled };
 };
@@ -51,6 +61,13 @@ const saveWidget = () => {
     if (w.type === "pico_placa") w.plateDigit = "";
     if (w.type === "siata") w.url = "https://geoportal.siata.gov.co/";
     setItem("widgets", [...list, w]);
+    
+    // Limpiar formulario
+    qs("#widget-name").value = "";
+    qs("#widget-order").value = "";
+    qs("#widgetEnabled").checked = false;
+    qs("#widgetType").selectedIndex = 0;
+    
     renderList();
 };
 
