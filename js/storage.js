@@ -240,6 +240,25 @@ const fetchRemote = async (k) => {
                 return JSON.parse(data.value); // Parsear correctamente
             }
             
+            // Corregir datos notificados que se guardaron como [object Object]
+            if (data.value === '[object Object]') {
+                console.log('🔧 Corrigiendo [object Object]:', data.value);
+                return {}; // Devolver objeto vacío
+            }
+            
+            // Corregir strings que parecen objetos pero están mal formados
+            if (typeof data.value === 'string' && data.value.includes('{') && data.value.includes('}')) {
+                console.log('🔧 Intentando corregir objeto mal formado:', data.value);
+                try {
+                    // Intentar parsear directamente
+                    return JSON.parse(data.value);
+                } catch {
+                    // Si falla, devolver objeto vacío
+                    console.log('🔧 No se pudo corregir, devolviendo objeto vacío');
+                    return {};
+                }
+            }
+            
             return null;
         }
     } catch (error) { 
