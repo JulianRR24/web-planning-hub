@@ -380,6 +380,15 @@ export const syncFromRemote = async (force = false) => {
                 
                 // Comparar con datos locales para sincronización inteligente
                 const localData = getLocal(full);
+                
+                // NO sobreescribir datos locales válidos con datos vacíos remotos
+                if (remoteData === null || remoteData === undefined || 
+                    (Array.isArray(remoteData) && remoteData.length === 0 && 
+                     localData && Array.isArray(localData) && localData.length > 0)) {
+                    console.log(`⚠️ Omitiendo sincronización de ${k}: datos remotos vacíos pero hay datos locales válidos`);
+                    continue;
+                }
+                
                 const shouldSync = force || !localData || JSON.stringify(localData) !== JSON.stringify(remoteData);
                 
                 if (shouldSync) {
