@@ -241,6 +241,11 @@ const fetchRemote = async (k) => {
         
         // Validar JSON antes de retornar
         try {
+            // Si ya es JSONB (viene de Supabase), retornar directamente
+            if (data.value && typeof data.value === 'object') {
+                return data.value;
+            }
+            // Si es string, intentar parsear
             const parsed = JSON.parse(data.value);
             return parsed;
         } catch (parseError) {
