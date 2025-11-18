@@ -1,4 +1,4 @@
-import { getItem, setItem, syncFromRemote } from "./storage.js";
+import { getItem, setItem, syncFromRemote, syncToRemote } from "./storage.js";
 import { qs, qsa, on, uid, days, dayName } from "./ui.js";
 
 const state = { editingId: "", buffer: null, editingEventId: "" };
@@ -138,6 +138,16 @@ const saveRoutine = () => {
       setItem("routines", list);
     }
   }
+  
+  // Sincronizar explícitamente con BD
+  syncToRemote("routines").then(success => {
+    if (success) {
+      console.log('✅ Rutinas sincronizadas con BD');
+    } else {
+      console.warn('⚠️ Error al sincronizar rutinas con BD');
+    }
+  });
+  
   renderRoutines();
 };
 
@@ -213,6 +223,16 @@ const duplicateRoutine = (id) => {
   if (!r) return;
   const copy = { ...JSON.parse(JSON.stringify(r)), id: uid("r_"), name: r.name + " (copia)" };
   setItem("routines", [...list, copy]);
+  
+  // Sincronizar explícitamente con BD
+  syncToRemote("routines").then(success => {
+    if (success) {
+      console.log('✅ Rutinas sincronizadas con BD (duplicar)');
+    } else {
+      console.warn('⚠️ Error al sincronizar rutinas con BD (duplicar)');
+    }
+  });
+  
   renderRoutines();
 };
 
@@ -222,6 +242,16 @@ const deleteRoutine = (id) => {
   setItem("routines", filtered);
   if (getItem("activeRoutineId") === id) setItem("activeRoutineId", "");
   if (state.editingId === id) { state.editingId = ""; state.buffer = null; qs("#routineName").value = ""; qs("#dayEvents").innerHTML = ""; }
+  
+  // Sincronizar explícitamente con BD
+  syncToRemote("routines").then(success => {
+    if (success) {
+      console.log('✅ Rutinas sincronizadas con BD (eliminar)');
+    } else {
+      console.warn('⚠️ Error al sincronizar rutinas con BD (eliminar)');
+    }
+  });
+  
   renderRoutines();
 };
 
@@ -281,8 +311,18 @@ const importJSON = async (e) => {
     const data = JSON.parse(text);
     if (Array.isArray(data.routines)) setItem("routines", data.routines);
     if (typeof data.activeRoutineId === "string") setItem("activeRoutineId", data.activeRoutineId);
+    
+    // Sincronizar explícitamente con BD
+    await Promise.all([
+      syncToRemote("routines"),
+      syncToRemote("activeRoutineId")
+    ]);
+    
+    console.log('✅ Datos importados y sincronizados con BD');
     renderRoutines();
-  } catch { }
+  } catch (error) {
+    console.error('❌ Error al importar JSON:', error);
+  }
 };
 
 document.addEventListener("DOMContentLoaded", initPage);

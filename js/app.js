@@ -16,9 +16,19 @@ const ensureBootstrapData = () => {
     const widgets = getItem("widgets");
     const activeRoutineId = getItem("activeRoutineId");
 
-    if (!Array.isArray(routines)) setItem("routines", []);
-    if (!Array.isArray(widgets)) setItem("widgets", []);
-    if (typeof activeRoutineId !== "string") setItem("activeRoutineId", "");
+    // Solo inicializar si NO existen datos (null/undefined), no si están vacíos
+    if (routines === null || routines === undefined) {
+        console.log('🔧 Inicializando routines vacío (no existía)');
+        setItem("routines", [], false); // No sincronizar automáticamente
+    }
+    if (widgets === null || widgets === undefined) {
+        console.log('🔧 Inicializando widgets vacío (no existía)');
+        setItem("widgets", [], false); // No sincronizar automáticamente
+    }
+    if (activeRoutineId === null || activeRoutineId === undefined) {
+        console.log('🔧 Inicializando activeRoutineId vacío (no existía)');
+        setItem("activeRoutineId", "", false); // No sincronizar automáticamente
+    }
 };
 
 

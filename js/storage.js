@@ -353,10 +353,10 @@ const listRemoteKeys = async () => {
     } 
 };
 
-// Versión mejorada de syncFromRemote con validación
+// Versión mejorada de syncFromRemote que solo carga desde BD sin sobreescribir datos locales válidos
 export const syncFromRemote = async (force = false) => {
     try {
-        console.log('🔄 Iniciando sincronización desde remoto...');
+        console.log('🔄 Iniciando carga desde remoto (solo si no hay datos locales)...');
         const remoteKeys = await listRemoteKeys();
         let syncCount = 0;
         let errorCount = 0;
@@ -378,25 +378,21 @@ export const syncFromRemote = async (force = false) => {
                     continue;
                 }
                 
-                // Comparar con datos locales para sincronización inteligente
+                // Verificar datos locales existentes
                 const localData = getLocal(full);
                 
-                // NO sobreescribir datos locales válidos con datos vacíos remotos
-                if (remoteData === null || remoteData === undefined || 
-                    (Array.isArray(remoteData) && remoteData.length === 0 && 
-                     localData && Array.isArray(localData) && localData.length > 0)) {
-                    console.log(`⚠️ Omitiendo sincronización de ${k}: datos remotos vacíos pero hay datos locales válidos`);
-                    continue;
-                }
-                
-                const shouldSync = force || !localData || JSON.stringify(localData) !== JSON.stringify(remoteData);
-                
-                if (shouldSync) {
+                // SOLO sincronizar si no hay datos locales o si se fuerza explícitamente
+                if (localData === null || localData === undefined) {
+                    console.log(`📥 Cargando desde BD (no hay datos locales): ${k}`);
                     putLocal(full, remoteData);
                     syncCount++;
-                    console.log(`✅ Sincronizado: ${k}`);
+                } else if (force) {
+                    // Solo con force=true se sobreescriben datos locales
+                    console.log(`🔄 Forzando sincronización desde BD: ${k}`);
+                    putLocal(full, remoteData);
+                    syncCount++;
                 } else {
-                    console.log(`⏭️ Sin cambios: ${k}`);
+                    console.log(`⏭️ Omitiendo ${k}: ya existen datos locales válidos`);
                 }
             } catch (keyError) {
                 console.error(`❌ Error procesando ${k}:`, keyError);
@@ -404,7 +400,7 @@ export const syncFromRemote = async (force = false) => {
             }
         }
         
-        console.log(`🎉 Sincronización completada: ${syncCount} actualizados, ${errorCount} errores`);
+        console.log(`🎉 Carga desde BD completada: ${syncCount} cargados, ${errorCount} errores`);
         return errorCount === 0;
     } catch (error) {
         console.error('❌ Error crítico en syncFromRemote:', error);
@@ -431,10 +427,10 @@ export const getItem = (key) => {
     return null;
 };
 
-export const setItem = (key, value) => {
+export const setItem = (key, value, syncRemote = true) => {
     const k = keyPrefix(key);
     
-    console.log('🔍 setItem llamado:', { key, k, value, type: typeof value });
+    console.log('🔍 setItem llamado:', { key, k, value, type: typeof value, syncRemote });
     
     // Validar valor antes de guardar
     if (!isValidData(value, key)) {
@@ -444,16 +440,25 @@ export const setItem = (key, value) => {
     
     const ok = putLocal(k, value);
     
-    // Sincronización remota asíncrona con retry
-    upsertRemote(k, value).catch(error => {
-        console.error(`❌ Error sincronizando ${key}:`, error);
-        // Intentar una vez más después de 2 segundos
-        setTimeout(() => {
-            upsertRemote(k, value).catch(retryError => {
-                console.error(`❌ Retry fallido para ${key}:`, retryError);
-            });
-        }, 2000);
-    });
+    // Sincronización remota solo si se solicita explícitamente y no es array vacío no intencional
+    if (syncRemote) {
+        // No sincronizar arrays vacíos si podrían sobreescribir datos válidos
+        const isPotentiallyUnwantedEmpty = Array.isArray(value) && value.length === 0;
+        if (isPotentiallyUnwantedEmpty) {
+            console.log(`⚠️ Omitiendo sincronización automática de array vacío para: ${key}`);
+            return ok;
+        }
+        
+        upsertRemote(k, value).catch(error => {
+            console.error(`❌ Error sincronizando ${key}:`, error);
+            // Intentar una vez más después de 2 segundos
+            setTimeout(() => {
+                upsertRemote(k, value).catch(retryError => {
+                    console.error(`❌ Retry fallido para ${key}:`, retryError);
+                });
+            }, 2000);
+        });
+    }
     
     return ok;
 };
@@ -479,6 +484,36 @@ export const keys = () => {
         }
     }
     return out;
+};
+
+// Función para sincronización explícita (cuando el usuario lo desea)
+export const syncToRemote = async (key) => {
+    try {
+        const k = keyPrefix(key);
+        const localData = getLocal(k);
+        
+        if (localData === null || localData === undefined) {
+            console.log(`⚠️ No hay datos locales para sincronizar: ${key}`);
+            return false;
+        }
+        
+        if (!isValidData(localData, key)) {
+            console.error(`❌ Datos locales inválidos para sincronizar: ${key}`);
+            return false;
+        }
+        
+        console.log(`📤 Sincronizando explícitamente a BD: ${key}`);
+        const success = await upsertRemote(k, localData);
+        
+        if (success) {
+            console.log(`✅ Sincronizado exitosamente: ${key}`);
+        }
+        
+        return success;
+    } catch (error) {
+        console.error(`❌ Error en syncToRemote(${key}):`, error);
+        return false;
+    }
 };
 
 // Función de diagnóstico
