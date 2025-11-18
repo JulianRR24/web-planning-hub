@@ -5,6 +5,12 @@ const state = { editingId: "", buffer: null, editingEventId: "" };
 
 const initPage = async () => {
   await syncFromRemote();
+  
+  // Inicializar buffer si no existe
+  if (!state.buffer) {
+    state.buffer = emptyRoutine();
+  }
+  
   mountDaySelect();
   renderRoutines();
   wireEditor();
