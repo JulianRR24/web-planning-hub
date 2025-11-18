@@ -46,7 +46,25 @@ const isValidData = (data, key) => {
     
     if (data === null || data === undefined) return false;
     
-    // Validar JSON
+    // activeRoutineId debe ser string o vacío (validar ANTES de JSON)
+    if (key === 'activeRoutineId') {
+        console.log('🔍 Validando activeRoutineId:', { data, type: typeof data, key });
+        
+        // Si es string, validar directamente
+        if (typeof data === 'string') {
+            const isValid = data === '' || data.trim().length > 0;
+            console.log('🔍 Resultado validación (string):', { data, isValid });
+            return isValid;
+        }
+        
+        // Si no es string, convertir y validar
+        const parsed = String(data);
+        const isValid = parsed === '' || parsed.trim().length > 0;
+        console.log('🔍 Resultado validación (convertido):', { parsed, isValid });
+        return isValid;
+    }
+    
+    // Validar JSON (solo para otras claves)
     if (typeof data === 'string') {
         try {
             JSON.parse(data);
@@ -63,24 +81,6 @@ const isValidData = (data, key) => {
         } catch {
             return false;
         }
-    }
-    
-    // activeRoutineId debe ser string o vacío
-    if (key === 'activeRoutineId') {
-        console.log('🔍 Validando activeRoutineId:', { data, type: typeof data, key });
-        
-        // Si es string, validar directamente
-        if (typeof data === 'string') {
-            const isValid = data === '' || data.trim().length > 0;
-            console.log('🔍 Resultado validación (string):', { data, isValid });
-            return isValid;
-        }
-        
-        // Si no es string, convertir y validar
-        const parsed = String(data);
-        const isValid = parsed === '' || parsed.trim().length > 0;
-        console.log('🔍 Resultado validación (convertido):', { parsed, isValid });
-        return isValid;
     }
     
     return true;
@@ -223,10 +223,23 @@ const fetchRemote = async (k) => {
         
         // Validar JSON antes de retornar
         try {
-            return JSON.parse(data.value);
+            const parsed = JSON.parse(data.value);
+            return parsed;
         } catch (parseError) {
             console.error(`❌ JSON corrupto en clave ${k}:`, parseError);
             console.log('🔧 Valor corrupto:', data.value);
+            
+            // Intentar limpiar datos corruptos comunes
+            if (data.value === 'sat' || data.value === 'sun' || data.value === 'mon' || data.value === 'tue' || data.value === 'wed' || data.value === 'thu' || data.value === 'fri') {
+                console.log('🔧 Corrigiendo día de semana:', data.value);
+                return data.value; // Devolver el string directamente
+            }
+            
+            if (data.value === '[]' || data.value === '{}') {
+                console.log('🔧 Corrigiendo array/object vacío:', data.value);
+                return JSON.parse(data.value); // Parsear correctamente
+            }
+            
             return null;
         }
     } catch (error) { 
