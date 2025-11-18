@@ -250,7 +250,13 @@ const fetchRemote = async (k) => {
             return parsed;
         } catch (parseError) {
             console.error(`❌ JSON corrupto en clave ${k}:`, parseError);
-            console.log('🔧 Valor corrupto:', data.value);
+            console.log('🔧 Valor corrupto:', data.value, 'Tipo:', typeof data.value);
+            
+            // Si es un objeto que vino de Supabase, retornarlo directamente
+            if (typeof data.value === 'object' && data.value !== null) {
+                console.log('🔧 Retornando objeto JSONB directamente:', data.value);
+                return data.value;
+            }
             
             // Intentar limpiar datos corruptos comunes
             // Para lastVisit: si es un día de la semana, devolver directamente
