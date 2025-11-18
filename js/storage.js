@@ -314,6 +314,8 @@ export const getItem = (key) => {
 export const setItem = (key, value) => {
     const k = keyPrefix(key);
     
+    console.log('🔍 setItem llamado:', { key, k, value, type: typeof value });
+    
     // Validar valor antes de guardar
     if (!isValidData(value, key)) {
         console.error(`❌ Datos inválidos para setItem(${key}):`, value);
