@@ -247,6 +247,16 @@ const fetchRemote = async (k) => {
             if (data.value && typeof data.value === 'object') {
                 return data.value;
             }
+            
+            // Para lastVisit: si es un día de la semana, devolver directamente sin parsear
+            if (k === 'agendasmart:lastVisit') {
+                const validDays = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
+                if (validDays.includes(data.value)) {
+                    console.log('🔧 lastVisit detectado, devolviendo directamente:', data.value);
+                    return data.value;
+                }
+            }
+            
             // Si es string, intentar parsear
             const parsed = JSON.parse(data.value);
             return parsed;
