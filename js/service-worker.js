@@ -1,12 +1,16 @@
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('notificationclick', (event) => {
-    const url = '/';
+    const url = './index.html';
     event.notification.close();
     event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        // Buscar cliente que ya esté en nuestra URL
         for (const client of clientList) {
-            if ('focus' in client) return client.focus();
+            if (client.url.includes('index.html') && 'focus' in client) {
+                return client.focus();
+            }
         }
+        // Si no hay cliente existente, abrir uno nuevo
         return self.clients.openWindow(url);
     }));
 });
