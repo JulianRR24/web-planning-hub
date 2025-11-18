@@ -65,8 +65,11 @@ const isValidData = (data, key) => {
     
     // activeRoutineId debe ser string o vacío
     if (key === 'activeRoutineId') {
+        console.log('🔍 Validando activeRoutineId:', { data, type: typeof data, key });
         const parsed = typeof data === 'string' ? data : String(data);
-        return parsed === '' || (typeof parsed === 'string' && parsed.trim().length > 0);
+        const isValid = parsed === '' || (typeof parsed === 'string' && parsed.trim().length > 0);
+        console.log('🔍 Resultado validación:', { parsed, isValid });
+        return isValid;
     }
     
     return true;
