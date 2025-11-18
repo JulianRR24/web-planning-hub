@@ -290,7 +290,14 @@ const dayGridLayout = () => {
         el.style.top = top + "px";
         el.style.height = Math.max(24, bottom - top) + "px";
         el.style.background = ev.color || "#c7d2fe";
-        el.textContent = ev.title;
+        const titleEl = document.createElement("div");
+        titleEl.className = "font-medium text-sm";
+        titleEl.textContent = ev.title;
+        const descEl = document.createElement("div");
+        descEl.className = "text-xs opacity-80 mt-1";
+        descEl.textContent = ev.desc || "";
+        el.appendChild(titleEl);
+        el.appendChild(descEl);
         grid.appendChild(el);
     });
 };
