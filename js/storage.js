@@ -353,10 +353,10 @@ const listRemoteKeys = async () => {
     } 
 };
 
-// Versión mejorada de syncFromRemote que solo carga desde BD sin sobreescribir datos locales válidos
+// Versión corregida: BD como fuente de verdad - siempre carga desde BD
 export const syncFromRemote = async (force = false) => {
     try {
-        console.log('🔄 Iniciando carga desde remoto (solo si no hay datos locales)...');
+        console.log('🔄 Cargando datos desde BD (fuente de verdad)...');
         const remoteKeys = await listRemoteKeys();
         let syncCount = 0;
         let errorCount = 0;
@@ -381,18 +381,19 @@ export const syncFromRemote = async (force = false) => {
                 // Verificar datos locales existentes
                 const localData = getLocal(full);
                 
-                // SOLO sincronizar si no hay datos locales o si se fuerza explícitamente
+                // SIEMPRE preferir datos remotos (BD) sobre locales
+                // La BD es la fuente de verdad
                 if (localData === null || localData === undefined) {
                     console.log(`📥 Cargando desde BD (no hay datos locales): ${k}`);
                     putLocal(full, remoteData);
                     syncCount++;
-                } else if (force) {
-                    // Solo con force=true se sobreescriben datos locales
-                    console.log(`🔄 Forzando sincronización desde BD: ${k}`);
+                } else if (force || JSON.stringify(localData) !== JSON.stringify(remoteData)) {
+                    // Si hay diferencia o se fuerza, actualizar con datos de BD
+                    console.log(`🔄 Actualizando desde BD (datos diferentes): ${k}`);
                     putLocal(full, remoteData);
                     syncCount++;
                 } else {
-                    console.log(`⏭️ Omitiendo ${k}: ya existen datos locales válidos`);
+                    console.log(`✅ Datos locales ya actualizados: ${k}`);
                 }
             } catch (keyError) {
                 console.error(`❌ Error procesando ${k}:`, keyError);
@@ -400,7 +401,7 @@ export const syncFromRemote = async (force = false) => {
             }
         }
         
-        console.log(`🎉 Carga desde BD completada: ${syncCount} cargados, ${errorCount} errores`);
+        console.log(`🎉 Sincronización desde BD completada: ${syncCount} actualizados, ${errorCount} errores`);
         return errorCount === 0;
     } catch (error) {
         console.error('❌ Error crítico en syncFromRemote:', error);
@@ -408,22 +409,32 @@ export const syncFromRemote = async (force = false) => {
     }
 };
 
-export const getItem = (key) => {
+export const getItem = async (key) => {
     const k = keyPrefix(key);
-    const cached = getLocal(k);
-    if (cached != null) return cached;
     
-    // Fetch remoto asíncrono con validación
-    fetchRemote(k).then(v => { 
-        if (v != null && isValidData(v, key)) {
-            putLocal(k, v);
-        } else if (v != null) {
-            console.error(`❌ Datos remotos inválidos para getItem(${key}):`, v);
+    // Siempre intentar obtener desde BD primero (fuente de verdad)
+    try {
+        const remoteData = await fetchRemote(k);
+        if (remoteData !== null && isValidData(remoteData, key)) {
+            // Actualizar caché local con datos de BD
+            putLocal(k, remoteData);
+            console.log(`📥 ${key}: cargado desde BD (fuente de verdad)`);
+            return remoteData;
+        } else if (remoteData !== null) {
+            console.error(`❌ Datos remotos inválidos para getItem(${key}):`, remoteData);
         }
-    }).catch(error => {
+    } catch (error) {
         console.error(`❌ Error fetch remoto getItem(${key}):`, error);
-    });
+    }
     
+    // Si no hay datos remotos válidos, usar caché local
+    const cached = getLocal(k);
+    if (cached !== null) {
+        console.log(`💾 ${key}: usando caché local (no hay datos en BD)`);
+        return cached;
+    }
+    
+    console.log(`⚠️ ${key}: no hay datos disponibles`);
     return null;
 };
 

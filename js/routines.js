@@ -12,8 +12,8 @@ const initPage = async () => {
   }
   
   mountDaySelect();
-  renderRoutines();
-  wireEditor();
+  await renderRoutines();
+  await wireEditor();
 };
 
 const emptyRoutine = () => ({ id: uid("r_"), name: "", days: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } });
@@ -123,10 +123,10 @@ const renderDayEvents = () => {
   });
 };
 
-const saveRoutine = () => {
+const saveRoutine = async () => {
   const r = readFormRoutine();
   if (!r) return;
-  const list = getItem("routines") || [];
+  const list = await getItem("routines") || [];
   if (!state.editingId) {
     const toSave = { ...state.buffer, id: r.id, name: r.name };
     setItem("routines", [...list, toSave]);
@@ -148,14 +148,14 @@ const saveRoutine = () => {
     }
   });
   
-  renderRoutines();
+  await renderRoutines();
 };
 
-const renderRoutines = () => {
-  const list = getItem("routines") || [];
+const renderRoutines = async () => {
+  const list = await getItem("routines") || [];
   const wrap = qs("#routinesList");
   wrap.innerHTML = "";
-  list.forEach(r => {
+  for (const r of list) {
     const card = document.createElement("div");
     card.className = "p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800";
     const head = document.createElement("div");
@@ -167,29 +167,30 @@ const renderRoutines = () => {
     actions.className = "flex items-center gap-2";
     const activate = document.createElement("button");
     activate.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
-    activate.textContent = getItem("activeRoutineId") === r.id ? "Activa" : "Activar";
-    on(activate, "click", () => { setItem("activeRoutineId", r.id); renderRoutines(); });
+    activate.textContent = (await getItem("activeRoutineId")) === r.id ? "Activa" : "Activar";
+    on(activate, "click", async () => { setItem("activeRoutineId", r.id); await renderRoutines(); });
     const edit = document.createElement("button");
     edit.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
     edit.textContent = "Editar";
-    on(edit, "click", () => loadRoutine(r.id));
+    on(edit, "click", async () => loadRoutine(r.id));
     const dup = document.createElement("button");
     dup.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
     dup.textContent = "Duplicar";
-    on(dup, "click", () => duplicateRoutine(r.id));
+    on(dup, "click", async () => duplicateRoutine(r.id));
     const del = document.createElement("button");
     del.className = "px-2 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-700";
     del.textContent = "Eliminar";
-    on(del, "click", () => deleteRoutine(r.id));
+    on(del, "click", async () => deleteRoutine(r.id));
     actions.appendChild(activate);
     actions.appendChild(edit);
     actions.appendChild(dup);
     actions.appendChild(del);
     head.appendChild(title);
     head.appendChild(actions);
+    card.appendChild(head);
     const daysWrap = document.createElement("div");
     daysWrap.className = "grid grid-cols-2 gap-2 text-sm";
-    days.forEach(k => {
+    for (const k of days) {
       const line = document.createElement("div");
       line.className = "flex items-center justify-between p-2 rounded-md bg-slate-50 dark:bg-slate-900/40";
       const name = document.createElement("span");
@@ -200,15 +201,14 @@ const renderRoutines = () => {
       line.appendChild(name);
       line.appendChild(count);
       daysWrap.appendChild(line);
-    });
-    card.appendChild(head);
+  }
     card.appendChild(daysWrap);
     wrap.appendChild(card);
-  });
+  }
 };
 
-const loadRoutine = (id) => {
-  const list = getItem("routines") || [];
+const loadRoutine = async (id) => {
+  const list = await getItem("routines") || [];
   const r = list.find(x => x.id === id);
   if (!r) return;
   state.editingId = id;
@@ -217,8 +217,8 @@ const loadRoutine = (id) => {
   renderDayEvents();
 };
 
-const duplicateRoutine = (id) => {
-  const list = getItem("routines") || [];
+const duplicateRoutine = async (id) => {
+  const list = await getItem("routines") || [];
   const r = list.find(x => x.id === id);
   if (!r) return;
   const copy = { ...JSON.parse(JSON.stringify(r)), id: uid("r_"), name: r.name + " (copia)" };
@@ -233,14 +233,14 @@ const duplicateRoutine = (id) => {
     }
   });
   
-  renderRoutines();
+  await renderRoutines();
 };
 
-const deleteRoutine = (id) => {
-  const list = getItem("routines") || [];
+const deleteRoutine = async (id) => {
+  const list = await getItem("routines") || [];
   const filtered = list.filter(x => x.id !== id);
   setItem("routines", filtered);
-  if (getItem("activeRoutineId") === id) setItem("activeRoutineId", "");
+  if (await getItem("activeRoutineId") === id) setItem("activeRoutineId", "");
   if (state.editingId === id) { state.editingId = ""; state.buffer = null; qs("#routineName").value = ""; qs("#dayEvents").innerHTML = ""; }
   
   // Sincronizar explícitamente con BD
@@ -252,10 +252,10 @@ const deleteRoutine = (id) => {
     }
   });
   
-  renderRoutines();
+  await renderRoutines();
 };
 
-const wireEditor = () => {
+const wireEditor = async () => {
   // Prevenir envío del formulario
   const form = qs("#routineForm");
   if (form) {
@@ -269,15 +269,15 @@ const wireEditor = () => {
   on(qs("#addEventBtn"), "click", addEventToBuffer);
   on(qs("#saveRoutineBtn"), "click", saveRoutine);
   on(qs("#routineDay"), "change", () => { state.editingEventId = ""; const btn = qs("#addEventBtn"); if (btn) btn.textContent = "Agregar evento"; renderDayEvents(); });
-  on(qs("#exportRoutines"), "click", exportJSON);
+  on(qs("#exportRoutines"), "click", async () => exportJSON());
   on(qs("#importRoutines"), "change", importJSON);
   const settingsBtn = qs("#settingsBtn");
   const modal = qs("#settingsModal");
   const closeBtn = qs("#settingsClose");
   const saveSettings = qs("#saveSettings");
   const askNotifyPerm = qs("#askNotifyPerm");
-  const ns = getItem("notifyBeforeStart") ?? 10;
-  const ne = getItem("notifyBeforeEnd") ?? 5;
+  const ns = await getItem("notifyBeforeStart") ?? 10;
+  const ne = await getItem("notifyBeforeEnd") ?? 5;
   if (qs("#notifyBeforeStart")) qs("#notifyBeforeStart").value = ns;
   if (qs("#notifyBeforeEnd")) qs("#notifyBeforeEnd").value = ne;
   on(settingsBtn, "click", () => { if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); } });
@@ -294,8 +294,8 @@ const wireEditor = () => {
   });
 };
 
-const exportJSON = () => {
-  const data = { routines: getItem("routines") || [], activeRoutineId: getItem("activeRoutineId") || "" };
+const exportJSON = async () => {
+  const data = { routines: await getItem("routines") || [], activeRoutineId: await getItem("activeRoutineId") || "" };
   const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

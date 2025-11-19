@@ -11,33 +11,33 @@ const registerServiceWorker = async () => {
     } catch { }
 };
 
-const ensureBootstrapData = () => {
-    const routines = getItem("routines");
-    const widgets = getItem("widgets");
-    const activeRoutineId = getItem("activeRoutineId");
+const ensureBootstrapData = async () => {
+    const routines = await getItem("routines");
+    const widgets = await getItem("widgets");
+    const activeRoutineId = await getItem("activeRoutineId");
 
-    // Solo inicializar si NO existen datos (null/undefined), no si están vacíos
+    // Solo inicializar si NO existen datos en BD ni localmente (null/undefined)
     if (routines === null || routines === undefined) {
-        console.log('🔧 Inicializando routines vacío (no existía)');
+        console.log('🔧 Inicializando routines vacío (no existe en BD ni local)');
         setItem("routines", [], false); // No sincronizar automáticamente
     }
     if (widgets === null || widgets === undefined) {
-        console.log('🔧 Inicializando widgets vacío (no existía)');
+        console.log('🔧 Inicializando widgets vacío (no existe en BD ni local)');
         setItem("widgets", [], false); // No sincronizar automáticamente
     }
     if (activeRoutineId === null || activeRoutineId === undefined) {
-        console.log('🔧 Inicializando activeRoutineId vacío (no existía)');
+        console.log('🔧 Inicializando activeRoutineId vacío (no existe en BD ni local)');
         setItem("activeRoutineId", "", false); // No sincronizar automáticamente
     }
 };
 
 
-const renderWidgetsOnHome = () => {
+const renderWidgetsOnHome = async () => {
     const grid = qs("#widgetsGrid");
     if (!grid) return;
     grid.innerHTML = "";
-    const widgets = (getItem("widgets") || []).filter(w => w.enabled).sort((a, b) => a.order - b.order).slice(0, 4);
-    widgets.forEach(w => {
+    const widgets = (await getItem("widgets") || []).filter(w => w.enabled).sort((a, b) => a.order - b.order).slice(0, 4);
+    for (const w of widgets) {
         const card = document.createElement("div");
         card.className = "p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800";
         const title = document.createElement("div");
@@ -45,7 +45,7 @@ const renderWidgetsOnHome = () => {
         title.textContent = w.title || w.type;
         const body = document.createElement("div");
         body.className = "text-sm";
-        if (w.type === "market") body.appendChild(renderMarketWidgetSummary());
+        if (w.type === "market") body.appendChild(await renderMarketWidgetSummary());
         if (w.type === "notes") body.textContent = (w.items || []).filter(x => !x.done).slice(0, 5).map(x => "• " + x.text).join("\n") || "Sin tareas";
         if (w.type === "quotes") body.textContent = (w.items || [])[0]?.text || "Agrega frases en Widgets";
         if (w.type === "weather") body.appendChild(renderWeatherWidget());
@@ -59,13 +59,13 @@ const renderWidgetsOnHome = () => {
         card.appendChild(title);
         card.appendChild(body);
         grid.appendChild(card);
-    });
+    }
     on(qs("#manageWidgets"), "click", () => location.href = "./widgets.html");
 };
 
-const renderMarketWidgetSummary = () => {
+const renderMarketWidgetSummary = async () => {
     const wrap = document.createElement("div");
-    const w = (getItem("widgets") || []).find(x => x.type === "market");
+    const w = (await getItem("widgets") || []).find(x => x.type === "market");
     const items = w?.items || [];
     const pending = items.filter(i => !i.done).length;
     const bought = items.filter(i => i.done).length;
@@ -283,12 +283,12 @@ const hoursColumn = () => {
     }
 };
 
-const dayGridLayout = () => {
+const dayGridLayout = async () => {
     const grid = qs("#dayGrid");
     if (!grid) return;
     grid.innerHTML = "";
-    const routineId = getItem("activeRoutineId") || "";
-    const routines = getItem("routines") || [];
+    const routineId = await getItem("activeRoutineId") || "";
+    const routines = await getItem("routines") || [];
     const routine = routines.find(r => r.id === routineId);
     const key = todayKey();
     const events = routine?.days?.[key] || [];
@@ -326,12 +326,12 @@ const timeNeedle = () => {
     tag.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const activeRoutineSelector = () => {
+const activeRoutineSelector = async () => {
     const select = qs("#activeRoutineSelector");
     if (!select) return;
     select.innerHTML = "";
-    const routines = getItem("routines") || [];
-    const activeId = getItem("activeRoutineId") || "";
+    const routines = await getItem("routines") || [];
+    const activeId = await getItem("activeRoutineId") || "";
     const optNone = document.createElement("option");
     optNone.value = "";
     optNone.textContent = "Sin rutina";
@@ -343,9 +343,9 @@ const activeRoutineSelector = () => {
         if (r.id === activeId) o.selected = true;
         select.appendChild(o);
     });
-    on(select, "change", () => {
+    on(select, "change", async () => {
         setItem("activeRoutineId", select.value);
-        dayGridLayout();
+        await dayGridLayout();
     });
 };
 
@@ -358,27 +358,27 @@ const currentDateText = () => {
 
 const initHome = async () => {
     try {
-        // 1️⃣ Cargar interfaz inmediatamente con datos locales
-        ensureBootstrapData();
-        wireSettings();
+        // 1️⃣ Cargar interfaz inmediatamente con datos desde BD (fuente de verdad)
+        await ensureBootstrapData();
+        await wireSettings();
         registerServiceWorker();
-        renderWidgetsOnHome();
+        await renderWidgetsOnHome();
         hoursColumn();
-        dayGridLayout();
-        activeRoutineSelector();
+        await dayGridLayout();
+        await activeRoutineSelector();
         currentDateText();
         timeNeedle();
         setInterval(timeNeedle, 30000);
-        startNotificationScheduler();
+        await startNotificationScheduler();
 
         // 2️⃣ Sincronizar con Supabase en segundo plano (sin bloquear)
         requestIdleCallback(async () => {
             const ok = await syncFromRemote(false);
             if (ok) {
                 console.log("✅ Datos sincronizados con Supabase (en segundo plano)");
-                // Opcional: re-render si hubo cambios nuevos
-                renderWidgetsOnHome();
-                activeRoutineSelector();
+                // Re-render si hubo cambios nuevos desde BD
+                await renderWidgetsOnHome();
+                await activeRoutineSelector();
             } else {
                 console.warn("⚠️ Falló la sincronización (offline mode)");
             }
@@ -391,15 +391,15 @@ const initHome = async () => {
 document.addEventListener("DOMContentLoaded", initHome);
 
 
-const wireSettings = () => {
+const wireSettings = async () => {
     const settingsBtn = qs("#settingsBtn");
     const modal = qs("#settingsModal");
     const closeBtn = qs("#settingsClose");
     const saveSettings = qs("#saveSettings");
     const askNotifyPerm = qs("#askNotifyPerm");
     const askGeoPerm = qs("#askGeoPerm");
-    const ns = getItem("notifyBeforeStart") ?? 10;
-    const ne = getItem("notifyBeforeEnd") ?? 5;
+    const ns = await getItem("notifyBeforeStart") ?? 10;
+    const ne = await getItem("notifyBeforeEnd") ?? 5;
     const nsEl = qs("#notifyBeforeStart");
     const neEl = qs("#notifyBeforeEnd");
     if (nsEl) nsEl.value = ns;
@@ -459,22 +459,22 @@ const wireSettings = () => {
     updatePermStates();
 };
 
-const startNotificationScheduler = () => {
-    const tick = () => {
+const startNotificationScheduler = async () => {
+    const tick = async () => {
         if (Notification?.permission !== "granted") return;
-        const routineId = getItem("activeRoutineId") || "";
-        const routines = getItem("routines") || [];
+        const routineId = await getItem("activeRoutineId") || "";
+        const routines = await getItem("routines") || [];
         const routine = routines.find(r => r.id === routineId);
         if (!routine) return;
         const key = todayKey();
         const events = routine.days?.[key] || [];
-        const beforeStart = Number(getItem("notifyBeforeStart") ?? 10);
-        const beforeEnd = Number(getItem("notifyBeforeEnd") ?? 5);
+        const beforeStart = Number(await getItem("notifyBeforeStart") ?? 10);
+        const beforeEnd = Number(await getItem("notifyBeforeEnd") ?? 5);
         const now = new Date();
         const nowMin = now.getHours() * 60 + now.getMinutes();
         const dateKey = now.toISOString().slice(0, 10);
         const notifKey = `notified:${dateKey}`;
-        const notified = getItem(notifKey) || {};
+        const notified = await getItem(notifKey) || {};
         const notify = (title, options) => {
             try {
                 if (swReg?.showNotification) swReg.showNotification(title, options); else new Notification(title, options);
@@ -494,8 +494,8 @@ const startNotificationScheduler = () => {
                 if (!notified[id2]) { notify(ev.title || "Evento", { body: "Próximo fin " + ev.end }); notified[id2] = true; }
             }
         });
-        setItem(notifKey, notified);
+        await setItem(notifKey, notified);
     };
-    tick();
-    setInterval(tick, 60000);
+    await tick();
+    setInterval(async () => await tick(), 60000);
 };

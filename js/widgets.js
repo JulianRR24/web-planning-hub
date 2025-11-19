@@ -1,11 +1,11 @@
-import { getItem, setItem, syncFromRemote } from "./storage.js";
+import { getItem, setItem, syncFromRemote, syncToRemote } from "./storage.js";
 import { qs, on, uid } from "./ui.js";
 
 const initPage = async () => {
     await syncFromRemote();  // Aseguramos que los datos estén sincronizados
-    wireSettings();
-    on(qs("#saveWidget"), "click", saveWidget);
-    on(qs("#deleteWidgetBtn"), "click", clearWidgets);
+    await wireSettings();
+    on(qs("#saveWidget"), "click", async () => saveWidget());
+    on(qs("#deleteWidgetBtn"), "click", async () => clearWidgets());
     
     // Prevenir recarga del formulario
     const form = qs("#widgetForm");
@@ -16,17 +16,18 @@ const initPage = async () => {
         });
     }
     
-    renderList();
+    // Renderizar lista inicial
+    await renderList();
 };
 
-const wireSettings = () => {
+const wireSettings = async () => {
     const settingsBtn = qs("#settingsBtn");
     const modal = qs("#settingsModal");
     const closeBtn = qs("#settingsClose");
     const saveSettings = qs("#saveSettings");
     const askNotifyPerm = qs("#askNotifyPerm");
-    const ns = getItem("notifyBeforeStart") ?? 10;
-    const ne = getItem("notifyBeforeEnd") ?? 5;
+    const ns = await getItem("notifyBeforeStart") ?? 10;
+    const ne = await getItem("notifyBeforeEnd") ?? 5;
     const nsEl = qs("#notifyBeforeStart");
     const neEl = qs("#notifyBeforeEnd");
     if (nsEl) nsEl.value = ns;
@@ -51,35 +52,43 @@ const readForm = () => {
     return { id: uid("w_"), type, title, order, enabled };
 };
 
-const saveWidget = () => {
+const saveWidget = async () => {
     const w = readForm();
-    const list = getItem("widgets") || [];
+    const list = await getItem("widgets") || [];
     if (w.enabled && list.filter(x => x.enabled).length >= 4) w.enabled = false;
     if (w.type === "market") w.items = [];
     if (w.type === "notes") w.items = [];
     if (w.type === "quotes") w.items = [];
     if (w.type === "pico_placa") w.plateDigit = "";
-    if (w.type === "siata") w.url = "https://geoportal.siata.gov.co/";
-    setItem("widgets", [...list, w]);
+    const existing = list.findIndex(x => x.id === w.id);
+    if (existing >= 0) {
+        list[existing] = w;
+    } else {
+        list.push(w);
+    }
+    setItem("widgets", list);
     
-    // Limpiar formulario
-    qs("#widget-name").value = "";
-    qs("#widget-order").value = "";
-    qs("#widgetEnabled").checked = false;
-    qs("#widgetType").selectedIndex = 0;
+    // Sincronizar explícitamente con BD
+    syncToRemote("widgets").then(success => {
+        if (success) {
+            console.log('✅ Widgets sincronizados con BD');
+        } else {
+            console.warn('⚠️ Error al sincronizar widgets con BD');
+        }
+    });
     
-    renderList();
+    await renderList();
 };
 
-const clearWidgets = () => {
+const clearWidgets = async () => {
     setItem("widgets", []);
-    renderList();
+    await renderList();
 };
 
-const renderList = () => {
+const renderList = async () => {
     const wrap = qs("#widgetsList");
     wrap.innerHTML = "";
-    const list = getItem("widgets") || [];
+    const list = await getItem("widgets") || [];
     list.sort((a, b) => a.order - b.order).forEach(w => {
         const row = document.createElement("div");
         row.className = "p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800";
